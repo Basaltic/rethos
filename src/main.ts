@@ -1,3 +1,3 @@
-const a = 1;
+import { create } from './create';
 
-export { a };
+export { create };
