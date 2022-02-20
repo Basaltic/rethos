@@ -1,7 +1,7 @@
 {
   "name": "rethos",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "files": [
     "dist"
   ],
@@ -39,5 +39,17 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Basaltic/rethos"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/Basaltic/rethos/issues"
+  },
+  "keywords": [
+    "react",
+    "state",
+    "manager",
+    "management",
+    "store"
+  ],
+  "author": "Lei Chen",
+  "license": "MIT"
 }
