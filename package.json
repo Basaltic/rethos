@@ -1,16 +1,16 @@
 {
-  "name": "redios",
-  "private": true,
+  "name": "rethos",
+  "private": false,
   "version": "0.0.1",
   "files": [
     "dist"
   ],
-  "main": "./dist/redios.umd.js",
-  "module": "./dist/redios.es.js",
+  "main": "./dist/rethos.umd.js",
+  "module": "./dist/rethos.es.js",
   "exports": {
     ".": {
-      "import": "./dist/redios.es.js",
-      "require": "./dist/redios.umd.js"
+      "import": "./dist/rethos.es.js",
+      "require": "./dist/rethos.umd.js"
     }
   },
   "scripts": {
