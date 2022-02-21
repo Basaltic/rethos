@@ -1,6 +1,7 @@
 # Rethos
 
 A Small, Concise but Powerful State Management Libaray in React.
+**Warning: It's unstable for now**
 
 # Installation
 
