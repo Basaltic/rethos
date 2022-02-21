@@ -1,11 +1,12 @@
 {
   "name": "rethos",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "files": [
     "dist"
   ],
   "main": "./dist/rethos.umd.js",
+  "types": "./dist/main.d.ts",
   "module": "./dist/rethos.es.js",
   "exports": {
     ".": {

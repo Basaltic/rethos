@@ -1,6 +1,6 @@
 # Rethos
 
-A Small, Concise but Powerful Proxy Based State Management Libaray in React.
+A Simple & Powerful Proxy Based State Management Libaray in React.
 
 **Warning: It's unstable for now**
 

@@ -1,4 +1,5 @@
 import { TState, TAction, SingleStore } from './lib/single-store';
+import { isObject } from './utils/is-object';
 
 /**
  * Create A Store
@@ -7,8 +8,12 @@ import { TState, TAction, SingleStore } from './lib/single-store';
  * @param {TAction} action a collection of action that change the state in the store
  * @returns
  */
-export function create<S extends TState, A extends TAction<S>>(state: S, action: A) {
-  const singleStore = new SingleStore(state, action);
+export function create<S extends TState, A extends TAction<S>>(state: S, action?: A) {
+  if (!isObject(state)) {
+    throw new Error('object required');
+  }
+
+  const singleStore = new SingleStore(state, action || {});
 
   return {
     state: singleStore.getState(),

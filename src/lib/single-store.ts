@@ -57,12 +57,16 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   private setupState() {
     return new Proxy(this.originalState, {
       get: (_: S, prop: string) => {
+        // TODO: Add deep recursive proxy
+
         try {
           if (!this.isInAction) {
             const useObservableStateHook = this.getObservableStateHook(prop);
             return useObservableStateHook();
           }
         } catch (e) {}
+
+        // TODO: Add deep recursive proxy
 
         return this.originalState[prop];
       },
