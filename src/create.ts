@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useForceUpdate } from './hooks/use-force-update';
 import { TState, TAction, SingleStore } from './lib/single-store';
 import { isObject } from './utils/is-object';
@@ -45,16 +46,31 @@ export function create<S extends TState, A = TAction<S>>(state: S, action?: A): 
     return defaultStore;
   };
 
+  /**
+   * State Hook
+   *
+   * @param id
+   * @returns
+   */
   const useState = (id?: Id) => {
     const forceUpdate = useForceUpdate();
 
-    const store = getStore(id);
-    const state = store.getState(forceUpdate);
+    const state = useMemo(() => {
+      const store = getStore(id);
+      return store.getState(forceUpdate);
+    }, [id, forceUpdate]);
+
     return state;
   };
 
+  /**
+   * Action Hook
+   *
+   * @param id
+   * @returns
+   */
   const useAction = (id?: Id) => {
-    const action = getStore(id).getAction() as Record<keyof A, () => void>;
+    const action = useMemo(() => getStore(id).getAction() as Record<keyof A, () => void>, [id]);
     return action;
   };
 

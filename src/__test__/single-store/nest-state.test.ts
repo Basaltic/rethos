@@ -1,9 +1,8 @@
-import { act, renderHook } from '@testing-library/react-hooks';
 import { it, expect } from 'vitest';
-import { create } from '../../create';
+import { SingleStore } from '../../lib/single-store';
 
 const createStore = () => {
-  const store = create(
+  const store = new SingleStore(
     {
       count: 1,
       app: {
@@ -25,64 +24,42 @@ const createStore = () => {
   return store;
 };
 
-const setUp = (useState: any) =>
-  renderHook(() => {
-    const { app } = useState();
-    const { count } = app;
-    return { count };
-  });
-
 it('simple nest counter test', () => {
-  const [useState, useAction] = createStore();
+  const store = createStore();
+  const state = store.getState();
+  const action = store.getAction();
 
-  const { result } = setUp(useState);
-  const action = useAction();
+  expect(state.app.count).toBe(1);
 
-  expect(result.current.count).toBe(1);
+  action.inc();
+  expect(state.app.count).toBe(2);
 
-  act(() => {
-    action.inc();
-  });
-  expect(result.current.count).toBe(2);
+  action.dec();
+  expect(state.app.count).toBe(1);
 
-  act(() => {
-    action.dec();
-  });
-  expect(result.current.count).toBe(1);
-
-  act(() => {
-    action.inc();
-    action.inc();
-  });
-  expect(result.current.count).toBe(3);
+  action.inc();
+  action.inc();
+  expect(state.app.count).toBe(3);
 });
 
 it('multi nest count test', () => {
-  const [useState, useAction] = createStore();
+  const store = createStore();
+  const state = store.getState();
+  const action = store.getAction();
 
-  const result1 = setUp(useState).result;
-  const result2 = setUp(useState).result;
-  const result3 = setUp(useState).result;
+  expect(state.app.count).toBe(1);
+  expect(state.app.count).toBe(1);
+  expect(state.app.count).toBe(1);
 
-  const action = useAction();
+  action.inc();
 
-  expect(result1.current.count).toBe(1);
-  expect(result2.current.count).toBe(1);
-  expect(result3.current.count).toBe(1);
+  expect(state.app.count).toBe(2);
+  expect(state.app.count).toBe(2);
+  expect(state.app.count).toBe(2);
 
-  act(() => {
-    action.inc();
-  });
+  action.dec();
 
-  expect(result1.current.count).toBe(2);
-  expect(result2.current.count).toBe(2);
-  expect(result3.current.count).toBe(2);
-
-  act(() => {
-    action.dec();
-  });
-
-  expect(result1.current.count).toBe(1);
-  expect(result2.current.count).toBe(1);
-  expect(result3.current.count).toBe(1);
+  expect(state.app.count).toBe(1);
+  expect(state.app.count).toBe(1);
+  expect(state.app.count).toBe(1);
 });

@@ -17,5 +17,6 @@
     "emitDeclarationOnly": true,
     "outDir": "dist"
   },
-  "include": ["src", "vite.config.js"]
+  "include": ["src", "vite.config.js"],
+  "exclude": ["src/__test__"]
 }
