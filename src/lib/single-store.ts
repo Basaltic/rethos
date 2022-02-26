@@ -1,48 +1,44 @@
-import { useState, Dispatch, SetStateAction, useMemo, useEffect } from 'react';
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
+import { isObject } from '../utils/is-object';
 
 export type TState = Record<string, any>;
-export type TAction<S> = Record<string, (s: S) => void>;
-
-type StateSetters<T> = { [key in keyof T]: Set<Dispatch<SetStateAction<T[keyof T]>>> };
-type ObservableState<T> = { [key in keyof T]: () => T[key] };
+export type TAction<S> = { [key: string]: (s: S) => void };
 
 type ActionUpdateCollection = Record<string, any>;
 
 /**
  * Single Store
  */
-export class SingleStore<S extends TState, A extends TAction<S>> {
-  /**
-   * Cache The Listeners
-   */
-  private stateSetters = {} as StateSetters<S>;
-
-  private observableStateHooks = {} as ObservableState<S>;
-
+export class SingleStore<S extends TState> {
   private actionUpdateCollection: ActionUpdateCollection = {};
 
+  private updateCollectionSet = new Set<any>();
+
   private originalState: any;
-  private originalAction: A;
+  private originalAction: TAction<S>;
 
   private proxyState: S;
-  private proxyAction: A;
+  private proxyAction: TAction<S>;
+
+  private updateStore = new WeakMap<any, Map<any, Set<any>>>();
 
   /**
-   * State Only Can be changed in action
+   * Check if action is running
    */
   private isInAction: boolean = false;
 
-  constructor(state: S, action: A) {
+  constructor(state: S, action: TAction<S>) {
     this.originalState = state;
     this.originalAction = action;
 
-    this.proxyState = this.setupState();
-    this.proxyAction = this.setupAction();
+    this.proxyState = this.createProxyStateInAction(state);
+    this.proxyAction = this.createProxyAction(action);
+
+    this.updateStore.set(state, new Map());
   }
 
-  public getState() {
-    return this.proxyState;
+  public getState(updateFunc: () => void) {
+    return this.createProxyState(this.originalState, updateFunc);
   }
 
   public getAction() {
@@ -50,47 +46,84 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   }
 
   /**
-   * Proxy the Original State
-   *  - auto make state first level kv observable use react hook
-   *  - auto collect state update in setter in an action
+   * Proxy the Original State Which only used in action as input params
+   *
+   * @param state
+   * @returns
    */
-  private setupState() {
-    return new Proxy(this.originalState, {
-      get: (_: S, prop: string) => {
-        // TODO: Add deep recursive proxy
-
-        try {
-          if (!this.isInAction) {
-            const useObservableStateHook = this.getObservableStateHook(prop);
-            return useObservableStateHook();
-          }
-        } catch (e) {}
-
-        // TODO: Add deep recursive proxy
-
-        return this.originalState[prop];
-      },
-      set: (_: S, prop: string, value: any) => {
-        if (!this.isInAction) {
-          throw new Error('state value only can be changed in actions');
-        } else {
-          // 原始的值会随着变化而变化，这是为了在同步的action中，如果多次改变同一个key的值，可以感知到前面的变化
-          this.originalState[prop] = value;
-
-          this.actionUpdateCollection[prop] = value;
-
-          return true;
+  private createProxyStateInAction(state: S): S {
+    return new Proxy(state, {
+      get: (target: S, propKey: string) => {
+        const value = Reflect.get(target, propKey);
+        if (isObject(value)) {
+          return this.createProxyStateInAction(value) as any;
         }
+        return value;
+      },
+      set: (target: S, propKey: string, value: any) => {
+        // change the original value
+        // the set op will immediately get the latest change
+        Reflect.set(target, propKey, value);
+
+        // collect the update
+        this.actionUpdateCollection[propKey] = value;
+
+        const targetUpdateStore = this.updateStore.get(target);
+        let keyUpdateSet = targetUpdateStore?.get(propKey);
+
+        keyUpdateSet?.forEach((u) => {
+          this.updateCollectionSet.add(u);
+        });
+
+        return true;
       },
     });
   }
 
   /**
+   * Proxy the Original State which is used in components
+   *  - auto make state observable
+   *  - auto collect state update in  action
+   */
+  private createProxyState(state: S, updateFunc: () => void): S {
+    return new Proxy(state, {
+      get: (target: S, propKey: string) => {
+        const value = Reflect.get(target, propKey);
+
+        let targetUpdateStore = this.updateStore.get(target);
+        if (!targetUpdateStore) {
+          targetUpdateStore = new Map();
+          this.updateStore.set(target, targetUpdateStore);
+        }
+
+        let keyUpdateSet = targetUpdateStore?.get(propKey);
+        if (!keyUpdateSet) {
+          keyUpdateSet = new Set();
+          targetUpdateStore?.set(propKey, keyUpdateSet);
+        }
+
+        if (!keyUpdateSet.has(updateFunc)) {
+          keyUpdateSet.add(updateFunc);
+        }
+
+        if (isObject(value)) {
+          return this.createProxyState(value, updateFunc) as any;
+        }
+
+        return value;
+      },
+      set: () => {
+        throw new Error('state value only can be changed in actions');
+      },
+    }) as S;
+  }
+
+  /**
    * Proxy the action functions
    */
-  private setupAction() {
-    return new Proxy(this.originalAction, {
-      get: (target: A, prop: string) => {
+  private createProxyAction(action: TAction<S>) {
+    return new Proxy(action, {
+      get: (target: TAction<S>, prop: string) => {
         const action = target[prop];
 
         return () => {
@@ -114,43 +147,12 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    * Actually Commit the State Update After Action
    */
   private commitActionUpdate() {
-    const keys = Object.keys(this.actionUpdateCollection);
-    for (const key of keys) {
-      const value = this.actionUpdateCollection[key];
-      const setters = this.getStateSetters(key);
-      for (const set of setters) {
-        set(value);
-      }
-    }
+    if (this.updateCollectionSet.size > 0) {
+      this.updateCollectionSet.forEach((update) => {
+        update?.();
+      });
 
-    this.actionUpdateCollection = {};
+      this.updateCollectionSet.clear();
+    }
   }
-
-  private getStateSetters(key: keyof S) {
-    let listeners = this.stateSetters[key];
-
-    if (!listeners) {
-      listeners = new Set();
-      this.stateSetters[key] = listeners;
-    }
-
-    return listeners;
-  }
-
-  private getObservableStateHook = (key: string) => {
-    const listeners = this.getStateSetters(key);
-
-    let hook = this.observableStateHooks[key];
-
-    if (!hook) {
-      hook = () => {
-        const [value, setValue] = useState(this.originalState[key]);
-        useMemo(() => listeners.add(setValue), []);
-        useEffect(() => () => listeners.delete(setValue) as unknown as void, []);
-        return value;
-      };
-    }
-
-    return hook;
-  };
 }

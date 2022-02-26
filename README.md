@@ -19,7 +19,6 @@ pnpm add rethos
 * Prerequire **_React_** Installed
 * Action is the **_only_** place to change the state
 * Subscribe (Destruct) the state in **_functional component_**
-* Store state must be an object
 
 # How It Works
 
@@ -27,13 +26,11 @@ Constructing...
 
 # Basic Example
 
-```typescript
+```tsx
 import rethos from 'rethos';
 
 // Create a store
-// - First argument: the state structure and default values
-// - Second argument: actions to change the state
-const counterStore = rethos.create(
+const [useCouterState, useCouterAction] = rethos.create(
   {
     count: 1,
   },
@@ -50,8 +47,8 @@ const counterStore = rethos.create(
 // Bind it in any functional component
 const CounterComponent1 = () => {
 
-  const { count } = counterStore.state
-  const { inc, dec } = counterStore.action
+  const { count } = useCouterState()
+  const { inc, dec } = useCouterAction()
 
   return <div>
     <div>count: {count}</div>
@@ -63,20 +60,12 @@ const CounterComponent1 = () => {
 }
 
 const CounterComponent2 = () => {
-
-  const { count } = counterStore.state
-  const { inc, dec } = counterStore.action
-
+  const { count } = useCouterState()
   return <div>
     <div>count: {count}</div>
-    <div>
-      <button onClick={inc}>Inc</button>
-      <button onClick={dec}>Dec</button>
-    </div>
   </div>
 }
 
-// Click the button & Two component will update together
 ```
 
 

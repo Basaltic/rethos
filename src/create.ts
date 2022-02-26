@@ -1,22 +1,62 @@
+import { useForceUpdate } from './hooks/use-force-update';
 import { TState, TAction, SingleStore } from './lib/single-store';
 import { isObject } from './utils/is-object';
+
+type Id = string | symbol;
+
+type StoreMap<S extends TState> = { [key: Id]: SingleStore<S> };
 
 /**
  * Create A Store
  *
  * @param {Object} state a object represent the state, MUST BE A OBJECT!!
  * @param {TAction} action a collection of action that change the state in the store
- * @returns
+ * @returns [useState, useAction]
  */
-export function create<S extends TState, A extends TAction<S>>(state: S, action?: A) {
+export function create<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S, (id?: Id) => Record<keyof A, () => void>] {
   if (!isObject(state)) {
     throw new Error('object required');
   }
 
-  const singleStore = new SingleStore(state, action || {});
+  const storeMap: StoreMap<S> = {};
 
-  return {
-    state: singleStore.getState(),
-    action: singleStore.getAction() as unknown as Record<keyof A, () => void>,
+  let defaultStore: SingleStore<S>;
+
+  /**
+   * Lazy init & get store by id
+   *
+   * @param id
+   * @returns
+   */
+  const getStore = (id?: Id) => {
+    if (id) {
+      let store = storeMap[id];
+      if (!store) {
+        let store = new SingleStore<S>(state, action || {});
+        storeMap[id] = store;
+      }
+      return store;
+    }
+
+    if (!defaultStore) {
+      defaultStore = new SingleStore(state, action || {});
+    }
+
+    return defaultStore;
   };
+
+  const useState = (id?: Id) => {
+    const forceUpdate = useForceUpdate();
+
+    const store = getStore(id);
+    const state = store.getState(forceUpdate);
+    return state;
+  };
+
+  const useAction = (id?: Id) => {
+    const action = getStore(id).getAction() as Record<keyof A, () => void>;
+    return action;
+  };
+
+  return [useState, useAction];
 }

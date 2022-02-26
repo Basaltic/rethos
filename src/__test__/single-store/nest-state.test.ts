@@ -6,13 +6,18 @@ const createStore = () => {
   const store = create(
     {
       count: 1,
+      app: {
+        count: 1,
+      },
     },
     {
       inc: (s) => {
         s.count += 1;
+        s.app.count += 1;
       },
       dec: (s) => {
         s.count -= 1;
+        s.app.count -= 1;
       },
     },
   );
@@ -22,11 +27,12 @@ const createStore = () => {
 
 const setUp = (useState: any) =>
   renderHook(() => {
-    const { count } = useState();
+    const { app } = useState();
+    const { count } = app;
     return { count };
   });
 
-it('simple counter test', () => {
+it('simple nest counter test', () => {
   const [useState, useAction] = createStore();
 
   const { result } = setUp(useState);
@@ -51,7 +57,7 @@ it('simple counter test', () => {
   expect(result.current.count).toBe(3);
 });
 
-it('multi count test', () => {
+it('multi nest count test', () => {
   const [useState, useAction] = createStore();
 
   const result1 = setUp(useState).result;
