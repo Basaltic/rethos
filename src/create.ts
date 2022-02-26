@@ -14,7 +14,10 @@ type StoreMap<S extends TState> = { [key: Id]: SingleStore<S> };
  * @param {TAction} action a collection of action that change the state in the store
  * @returns [useState, useAction]
  */
-export function create<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S, (id?: Id) => Record<keyof A, () => void>] {
+export function createStore<S extends TState, A = TAction<S>>(
+  state: S,
+  action?: A,
+): [(id?: Id) => S, (id?: Id) => Record<keyof A, () => void>] {
   if (!isObject(state)) {
     throw new Error('object required');
   }

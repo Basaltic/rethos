@@ -1,4 +1,6 @@
-# v0.2.1
+
+
+# v0.2.2
 
 * memorize the state & action
 * add more test case

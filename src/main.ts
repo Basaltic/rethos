@@ -1,3 +1,1 @@
-import { create } from './create';
-
-export { create as createStore };
+export { createStore } from './create';
