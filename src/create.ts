@@ -1,20 +1,26 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForceUpdate } from './hooks/use-force-update';
-import { TState, TAction, ExtractAction, SingleStore } from './lib/single-store';
+import { TState, TAction, ExtractAction, SingleStore, ISingleStoreConfigs } from './lib/single-store';
 import { isObject } from './utils/is-object';
 
 type Id = string | symbol;
 
 type StoreMap<S extends TState, A extends TAction<S>> = { [key: Id]: SingleStore<S, A> };
 
+export type StoreConfig = Omit<ISingleStoreConfigs, 'id'>;
+
 /**
  * Create A Store
  *
  * @param {Object} state a object represent the state, MUST BE A OBJECT!!
  * @param {TAction} action a collection of action that change the state in the store
- * @returns [useState, useAction]
+ * @returns [useState, getActions]
  */
-export function createStore<S extends TState, A extends TAction<S>>(state: S, action?: A): [(id?: Id) => S, (id?: Id) => ExtractAction<A>] {
+export function createStore<S extends TState, A extends TAction<S>>(
+  state: S,
+  action: A,
+  config?: StoreConfig,
+): [(id?: Id) => S, (id?: Id) => ExtractAction<A>] {
   if (!isObject(state)) {
     throw new Error('object required');
   }
@@ -33,14 +39,14 @@ export function createStore<S extends TState, A extends TAction<S>>(state: S, ac
     if (id) {
       let store = storeMap[id];
       if (!store) {
-        let store = new SingleStore<S, A>(state, action);
+        let store = new SingleStore<S, A>(state, action, { ...config, id });
         storeMap[id] = store;
       }
       return store;
     }
 
     if (!defaultStore) {
-      defaultStore = new SingleStore<S, A>(state, action);
+      defaultStore = new SingleStore<S, A>(state, action, { ...config, id: '' });
     }
 
     return defaultStore;
@@ -58,6 +64,13 @@ export function createStore<S extends TState, A extends TAction<S>>(state: S, ac
     const state = useMemo(() => {
       const store = getStore(id);
       return store.getState(forceUpdate);
+    }, [id, forceUpdate]);
+
+    useEffect(() => {
+      return () => {
+        const store = getStore(id);
+        store.cleanUpdate(forceUpdate);
+      };
     }, [id, forceUpdate]);
 
     return state;

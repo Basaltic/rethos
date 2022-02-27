@@ -40,22 +40,30 @@ it('simple counter test', () => {
 it('multi count test', () => {
   const store = createStore();
 
-  const state = store.getState();
+  const uf1 = () => {};
+  const uf2 = () => {};
+  const uf3 = () => {};
+
+  const state1 = store.getState(uf1);
+  const state2 = store.getState(uf2);
+  const state3 = store.getState(uf3);
   const action = store.getAction();
 
-  expect(state.count).toBe(1);
-  expect(state.count).toBe(1);
-  expect(state.count).toBe(1);
+  expect(state1.count).toBe(1);
+  expect(state2.count).toBe(1);
+  expect(state3.count).toBe(1);
 
   action.inc();
 
-  expect(state.count).toBe(2);
-  expect(state.count).toBe(2);
-  expect(state.count).toBe(2);
+  expect(state1.count).toBe(2);
+  expect(state2.count).toBe(2);
+  expect(state3.count).toBe(2);
 
   action.dec();
 
-  expect(state.count).toBe(1);
-  expect(state.count).toBe(1);
-  expect(state.count).toBe(1);
+  expect(state1.count).toBe(1);
+  expect(state2.count).toBe(1);
+  expect(state3.count).toBe(1);
+
+  store.cleanUpdate(uf1);
 });

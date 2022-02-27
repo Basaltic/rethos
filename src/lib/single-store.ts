@@ -1,39 +1,71 @@
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
 import { isObject } from '../utils/is-object';
 
+type DropFirst<T extends unknown[]> = T extends [any, ...infer U] ? U : never;
+
 export type TState = Record<string, any>;
 export type TAction<S> = { [key: string]: (s: S, ...args: any) => any };
 export type TProxyAction = { [key: string]: () => void };
-
-type DropFirst<T extends unknown[]> = T extends [any, ...infer U] ? U : never;
 
 export type ExtractAction<A extends TAction<any>> = {
   [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
 };
 
 /**
+ * Extra Configs of the single store
+ */
+export interface ISingleStoreConfigs {
+  /**
+   * Id of the instance
+   */
+  id?: any;
+  /**
+   * Name of the Store
+   */
+  name?: string;
+}
+
+/**
  * Single Store to mange the state and action
  */
 export class SingleStore<S extends TState, A extends TAction<S>> {
-  private originalState: any;
-  private originalAction?: A;
+  configs?: ISingleStoreConfigs;
 
-  private proxyAction!: TProxyAction;
+  originalState: any;
+  originalAction?: A;
 
-  private observableStore = new WeakMap<any, Map<any, Set<any>>>();
+  proxyAction!: TProxyAction;
+
+  /**
+   * state -> propKey -> <update func> set
+   */
+  observableUpdateMap = new WeakMap<any, Map<any, Set<any>>>();
+
+  /**
+   * update func -> set of prop key set
+   */
+  updateToPropKeySetMap = new WeakMap<any, Set<any>>();
 
   /**
    * collect the "update func" in an action
    */
-  private updateCollectionSet = new Set<any>();
+  updateCollectionSet = new Set<any>();
 
-  constructor(state: S, action?: A) {
+  constructor(state: S, action: A, configs?: ISingleStoreConfigs) {
+    this.configs = configs;
+
     this.originalState = state;
     this.originalAction = action;
 
-    this.observableStore.set(state, new Map());
+    this.observableUpdateMap.set(state, new Map());
   }
 
+  /**
+   * Get State
+   *
+   * @param updateFunc Called when the subscribed prop value changed
+   * @returns
+   */
   public getState(updateFunc?: () => void) {
     return this.createProxyState(this.originalState, updateFunc);
   }
@@ -47,6 +79,19 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
     }
 
     return this.proxyAction as ExtractAction<A>;
+  }
+
+  /**
+   * Clean the unused subscribed function
+   *
+   * @param updateFunc func subscribted to the state
+   */
+  public cleanUpdate(updateFunc: () => void) {
+    const updateFuncSet = this.updateToPropKeySetMap.get(updateFunc);
+    updateFuncSet?.forEach((set: Set<any>) => {
+      set.delete(updateFunc);
+    });
+    this.updateToPropKeySetMap.delete(updateFunc);
   }
 
   /**
@@ -70,14 +115,16 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
         Reflect.set(target, propKey, value);
 
         // collect the update
-        const targetUpdateStore = this.observableStore.get(target);
-        let keyUpdateSet = targetUpdateStore?.get(propKey);
-
-        keyUpdateSet?.forEach((u) => {
-          this.updateCollectionSet.add(u);
-        });
+        this.collectUpdate(target, propKey);
 
         return true;
+      },
+      deleteProperty: (target: S, propKey: string) => {
+        const result = Reflect.deleteProperty(target, propKey);
+
+        this.collectUpdate(target, propKey);
+
+        return result;
       },
     });
   }
@@ -93,20 +140,28 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
         const value = Reflect.get(target, propKey);
 
         if (updateFunc) {
-          let targetUpdateStore = this.observableStore.get(target);
-          if (!targetUpdateStore) {
-            targetUpdateStore = new Map();
-            this.observableStore.set(target, targetUpdateStore);
+          let targetPropUpdateMap = this.observableUpdateMap.get(target);
+          if (!targetPropUpdateMap) {
+            targetPropUpdateMap = new Map();
+            this.observableUpdateMap.set(target, targetPropUpdateMap);
           }
 
-          let keyUpdateSet = targetUpdateStore?.get(propKey);
-          if (!keyUpdateSet) {
-            keyUpdateSet = new Set();
-            targetUpdateStore?.set(propKey, keyUpdateSet);
+          let propKeyUpdateSet = targetPropUpdateMap.get(propKey);
+          if (!propKeyUpdateSet) {
+            propKeyUpdateSet = new Set();
+            targetPropUpdateMap.set(propKey, propKeyUpdateSet);
           }
 
-          if (!keyUpdateSet.has(updateFunc)) {
-            keyUpdateSet.add(updateFunc);
+          if (!propKeyUpdateSet.has(updateFunc)) {
+            propKeyUpdateSet.add(updateFunc);
+
+            let updateFuncSet = this.updateToPropKeySetMap.get(updateFunc);
+            if (!updateFuncSet) {
+              updateFuncSet = new Set();
+              this.updateToPropKeySetMap.set(updateFunc, updateFuncSet);
+            }
+
+            updateFuncSet.add(propKeyUpdateSet);
           }
         }
 
@@ -162,5 +217,17 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
 
       this.updateCollectionSet.clear();
     }
+  }
+
+  /**
+   * Collect Update
+   */
+  private collectUpdate(target: any, propKey: string) {
+    const targetUpdateStore = this.observableUpdateMap.get(target);
+    let keyUpdateSet = targetUpdateStore?.get(propKey);
+
+    keyUpdateSet?.forEach((u) => {
+      this.updateCollectionSet.add(u);
+    });
   }
 }

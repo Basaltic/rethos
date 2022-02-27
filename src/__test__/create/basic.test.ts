@@ -1,9 +1,9 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 import { it, expect } from 'vitest';
-import { create } from '../../create';
+import { createStore } from '../../main';
 
-const createStore = () => {
-  const store = create(
+const createTestStore = () => {
+  const store = createStore(
     {
       count: 1,
     },
@@ -28,7 +28,7 @@ const setUp = (useState: any, useAction) => {
 };
 
 it('test hooks: simple counter', () => {
-  const [useState, useAction] = createStore();
+  const [useState, useAction] = createTestStore();
   const { result } = setUp(useState, useAction);
 
   const action = result.current.action;
@@ -52,7 +52,7 @@ it('test hooks: simple counter', () => {
 });
 
 it('test hooks: multi count test', () => {
-  const [useState, useAction] = createStore();
+  const [useState, useAction] = createTestStore();
 
   const result1 = setUp(useState, useAction).result;
   const result2 = setUp(useState, useAction).result;

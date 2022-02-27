@@ -44,22 +44,25 @@ it('simple nest counter test', () => {
 
 it('multi nest count test', () => {
   const store = createStore();
-  const state = store.getState();
+
+  const state1 = store.getState(() => {});
+  const state2 = store.getState(() => {});
+  const state3 = store.getState(() => {});
   const action = store.getAction();
 
-  expect(state.app.count).toBe(1);
-  expect(state.app.count).toBe(1);
-  expect(state.app.count).toBe(1);
+  expect(state1.app.count).toBe(1);
+  expect(state2.app.count).toBe(1);
+  expect(state3.app.count).toBe(1);
 
   action.inc();
 
-  expect(state.app.count).toBe(2);
-  expect(state.app.count).toBe(2);
-  expect(state.app.count).toBe(2);
+  expect(state1.app.count).toBe(2);
+  expect(state2.app.count).toBe(2);
+  expect(state3.app.count).toBe(2);
 
   action.dec();
 
-  expect(state.app.count).toBe(1);
-  expect(state.app.count).toBe(1);
-  expect(state.app.count).toBe(1);
+  expect(state1.app.count).toBe(1);
+  expect(state2.app.count).toBe(1);
+  expect(state3.app.count).toBe(1);
 });
