@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useForceUpdate } from './hooks/use-force-update';
-import { TState, TAction, SingleStore } from './lib/single-store';
+import { TState, TAction, ExtractAction, SingleStore } from './lib/single-store';
 import { isObject } from './utils/is-object';
 
 type Id = string | symbol;
 
-type StoreMap<S extends TState> = { [key: Id]: SingleStore<S> };
+type StoreMap<S extends TState, A extends TAction<S>> = { [key: Id]: SingleStore<S, A> };
 
 /**
  * Create A Store
@@ -14,17 +14,14 @@ type StoreMap<S extends TState> = { [key: Id]: SingleStore<S> };
  * @param {TAction} action a collection of action that change the state in the store
  * @returns [useState, useAction]
  */
-export function createStore<S extends TState, A = TAction<S>>(
-  state: S,
-  action?: A,
-): [(id?: Id) => S, (id?: Id) => Record<keyof A, () => void>] {
+export function createStore<S extends TState, A extends TAction<S>>(state: S, action?: A): [(id?: Id) => S, (id?: Id) => ExtractAction<A>] {
   if (!isObject(state)) {
     throw new Error('object required');
   }
 
-  const storeMap: StoreMap<S> = {};
+  const storeMap: StoreMap<S, A> = {};
 
-  let defaultStore: SingleStore<S>;
+  let defaultStore: SingleStore<S, A>;
 
   /**
    * Lazy init & get store by id
@@ -36,14 +33,14 @@ export function createStore<S extends TState, A = TAction<S>>(
     if (id) {
       let store = storeMap[id];
       if (!store) {
-        let store = new SingleStore<S>(state, action || {});
+        let store = new SingleStore<S, A>(state, action);
         storeMap[id] = store;
       }
       return store;
     }
 
     if (!defaultStore) {
-      defaultStore = new SingleStore(state, action || {});
+      defaultStore = new SingleStore<S, A>(state, action);
     }
 
     return defaultStore;
@@ -67,15 +64,15 @@ export function createStore<S extends TState, A = TAction<S>>(
   };
 
   /**
-   * Action Hook
+   * Get Action
    *
    * @param id
    * @returns
    */
-  const useAction = (id?: Id) => {
-    const action = useMemo(() => getStore(id).getAction() as Record<keyof A, () => void>, [id]);
+  const getActions = (id?: Id) => {
+    const action = getStore(id).getAction();
     return action;
   };
 
-  return [useState, useAction];
+  return [useState, getActions];
 }
