@@ -1,3 +1,5 @@
+简体中文 | [English]((https://github.com/Basaltic/rethos/blob/main/README.en.md))
+
 # Rethos 
 
 [![NPM Version](https://img.shields.io/npm/v/rethos?style=flat&colorA=brightgreen&colorB=lightgrey)](https://www.npmjs.com/package/rethos)
@@ -5,10 +7,12 @@
 
 小巧、简洁、强大的React状态管理库。
 
-* **Minimal Api**, only one api to create store (or store family), no extra boilerplate
-* **Auto Subscribition**, no select function needed, make code clean
-* **Flux Architecture**, simpified flux architecture, state only can be changed in actions
-* **Small**, about 1kb gzip
+* **小巧**：压缩后大概只有 1kb 的大小
+* **简洁**：只有一个api，不存在过多的样板代码
+* **自动订阅**：用到哪个状态就自动订阅该状态并变更，不需要写任何的 select 函数来手动指定
+* **Flux架构**：遵循简化的flux架构，使得状态更可控和管理
+
+**1.0之前，api可能不稳定，可能会有较大的变更**
 # 安装
 
 ```bash
@@ -20,17 +24,16 @@ npm install rethos # or yarn add rethos or pnpm add rethos
 ```tsx
 import rethos from 'rethos';
 
-// create a store, define the default state & actions
-// return two hooks
-// 1. state hook
-// 2. action hook
-const [useCouterState, useCouterAction] = rethos.createStore(
+// 创建一个 Store，并传入默认的状态 和 action 方法，返回一个数组（包含两个 Hook 函数）
+// 1. 订阅、获取状态的hook
+// 2. 获取action方法，可以使用在任何地方
+const [useCouterState, getCouterActions] = rethos.createStore(
   {
     count: 1,
   },
   {
-    inc: (s) => {
-      s.count += 1;
+    inc: (s, gap?) => {
+      s.count += gap || 1;
     },
     dec: (s) => {
       s.count -= 1;
@@ -38,21 +41,20 @@ const [useCouterState, useCouterAction] = rethos.createStore(
   },
 );
 
-// Bind it in any functional component
 const CounterComponent1 = () => {
 
-  // add the hook at the top of component
-  // destruct the state and it will auto update if the state is changed, that's it
-  // you don't need to pass select functions
+  // 调用hook，放置在组件的顶部 （遵循hook的规范）
+  // 析构需要的状态，rethos 会自动订阅相关状态，并且在值变更的时候自动触发组件渲染
   const { count } = useCouterState()
-  // call the action hook if you want to call the action
-  const { inc, dec } = useCouterAction()
+  // 获取actions
+  const { inc, dec } = getCouterActions()
 
   return <div>
     <div>count: {count}</div>
     <div>
-      <button onClick={inc}>Inc</button>
-      <button onClick={dec}>Dec</button>
+      <button onClick={inc}>增加</button>
+      <button onClick={() => inc(10)}>增加 10</button>
+      <button onClick={dec}>减少</button>
     </div>
   </div>
 }
@@ -89,9 +91,9 @@ export function createStore<S extends TState, A = TAction<S>>(state: S, action?:
    * 
    * @param {string | undefined} id identify the action in the family
    */
-  function useAction(id?: string): Record<keyof A, () => void> {}
+  function getActions(id?: string): Record<keyof A, () => void> {}
 
-  return [useState, useAction]
+  return [useState, getActions]
 }
 
 

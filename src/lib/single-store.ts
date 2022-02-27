@@ -2,15 +2,21 @@ import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
 import { isObject } from '../utils/is-object';
 
 export type TState = Record<string, any>;
-export type TAction<S> = { [key: string]: (s: S) => void };
+export type TAction<S> = { [key: string]: (s: S, ...args: any) => any };
 export type TProxyAction = { [key: string]: () => void };
+
+type DropFirst<T extends unknown[]> = T extends [any, ...infer U] ? U : never;
+
+export type ExtractAction<A extends TAction<any>> = {
+  [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
+};
 
 /**
  * Single Store to mange the state and action
  */
-export class SingleStore<S extends TState> {
+export class SingleStore<S extends TState, A extends TAction<S>> {
   private originalState: any;
-  private originalAction: TAction<S>;
+  private originalAction?: A;
 
   private proxyAction!: TProxyAction;
 
@@ -21,7 +27,7 @@ export class SingleStore<S extends TState> {
    */
   private updateCollectionSet = new Set<any>();
 
-  constructor(state: S, action: TAction<S>) {
+  constructor(state: S, action?: A) {
     this.originalState = state;
     this.originalAction = action;
 
@@ -33,12 +39,14 @@ export class SingleStore<S extends TState> {
   }
 
   public getAction() {
-    if (!this.proxyAction) {
-      const proxyState = this.createProxyStateInAction(this.originalState);
-      this.proxyAction = this.createProxyAction(this.originalAction, proxyState);
+    if (this.originalAction) {
+      if (!this.proxyAction) {
+        const proxyState = this.createProxyStateInAction(this.originalState);
+        this.proxyAction = this.createProxyAction(this.originalAction, proxyState);
+      }
     }
 
-    return this.proxyAction;
+    return this.proxyAction as ExtractAction<A>;
   }
 
   /**
@@ -128,9 +136,9 @@ export class SingleStore<S extends TState> {
     return new Proxy(action, {
       get: (target: TAction<S>, prop: string) => {
         const action = target[prop];
-        return () => {
+        return (...args: any) => {
           try {
-            action(state);
+            action(state, ...args);
 
             if (typeof reactBatchUpdate === 'function') {
               reactBatchUpdate(this.commitActionUpdate.bind(this));

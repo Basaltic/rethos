@@ -1,4 +1,4 @@
-[简体中文]() | English
+[简体中文](https://github.com/Basaltic/rethos/blob/main/README.md) | English
 
 # Rethos 
 
@@ -7,10 +7,12 @@
 
 A small, simple but powerful proxy based state management libaray in react. 
 
+* **Small**, about 1kb gzip
 * **Minimal Api**, only one api to create store (or store family), no extra boilerplate
 * **Auto Subscribition**, no select function needed, make code clean
 * **Flux Architecture**, simpified flux architecture, state only can be changed in actions
-* **Small**, about 1kb gzip
+
+**It's not stable for now. Before v1.0, the api may be change.**
 # Installation
 
 ```bash
@@ -22,17 +24,16 @@ npm install rethos # or yarn add rethos or pnpm add rethos
 ```tsx
 import rethos from 'rethos';
 
-// create a store, define the default state & actions
-// return two hooks
+// create a store, define the default state & action & return two hooks
 // 1. state hook
-// 2. action hook
-const [useCouterState, useCouterAction] = rethos.createStore(
+// 2. get action function
+const [useCouterState, getCouterActions] = rethos.createStore(
   {
     count: 1,
   },
   {
-    inc: (s) => {
-      s.count += 1;
+    inc: (s, gap?) => {
+      s.count += gap || 1;
     },
     dec: (s) => {
       s.count -= 1;
@@ -47,13 +48,14 @@ const CounterComponent1 = () => {
   // destruct the state and it will auto update if the state is changed, that's it
   // you don't need to pass select functions
   const { count } = useCouterState()
-  // call the action hook if you want to call the action
-  const { inc, dec } = useCouterAction()
+  // call to get actions
+  const { inc, dec } = getCouterActions()
 
   return <div>
     <div>count: {count}</div>
     <div>
       <button onClick={inc}>Inc</button>
+      <button onClick={() => inc(10)}>Inc 10</button>
       <button onClick={dec}>Dec</button>
     </div>
   </div>
@@ -91,9 +93,9 @@ export function createStore<S extends TState, A = TAction<S>>(state: S, action?:
    * 
    * @param {string | undefined} id identify the action in the family
    */
-  function useAction(id?: string): Record<keyof A, () => void> {}
+  function getActions(id?: string): Record<keyof A, () => void> {}
 
-  return [useState, useAction]
+  return [useState, getActions]
 }
 
 
