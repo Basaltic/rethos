@@ -72,22 +72,23 @@ const CounterComponent2 = () => {
 
 ```ts
 /**
- * Create A Store
+ * 创建Store
  *
- * @param {Object} state a object represent the state, MUST BE A OBJECT!!
- * @param {TAction} action a collection of action that change the state in the store
- * @returns [useState, useAction]
+ * @param {Object} state 默认状态对象
+ * @param {Object} action 一组修改状态的action方法
+ * @returns [useState, getActions]
  */
 export function createStore<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S,  (id?: Id) => Record<keyof A, () => void>] {
 
   /**
-   * 
+   * 状态hook，用于组件中自动订阅
    * 
    * @param {string | undefined} id identify the state in the family
    */
   function useState(id?: string): S {}
 
   /**
+   * 获取 action 
    * 
    * @param {string | undefined} id identify the action in the family
    */
@@ -99,9 +100,15 @@ export function createStore<S extends TState, A = TAction<S>>(state: S, action?:
 
 ```
 
-# How It Works
+# 浏览器兼容
 
-Constructing...
+| Browser | Supported |
+|--|--|
+| Chromium | ✅ |
+| Edge | ✅ |
+| Safari 10+ | ✅ |
+| Firefox | ✅ |
+| IE | ❌ |
 
 # LICENSE
 

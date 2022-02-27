@@ -83,13 +83,14 @@ const CounterComponent2 = () => {
 export function createStore<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S,  (id?: Id) => Record<keyof A, () => void>] {
 
   /**
-   * 
+   * State Subscribe & Fetch Hook
    * 
    * @param {string | undefined} id identify the state in the family
    */
   function useState(id?: string): S {}
 
   /**
+   * Get Action Instance, can be called in anywhere
    * 
    * @param {string | undefined} id identify the action in the family
    */
@@ -101,9 +102,16 @@ export function createStore<S extends TState, A = TAction<S>>(state: S, action?:
 
 ```
 
-# How It Works
+# Browser Compatibility
 
-Constructing...
+| Browser | Supported |
+|--|--|
+| Chromium | ✅ |
+| Edge | ✅ |
+| Safari 10+ | ✅ |
+| Firefox | ✅ |
+| IE | ❌ |
+
 
 # LICENSE
 
