@@ -1,4 +1,4 @@
-简体中文 | [English]((https://github.com/Basaltic/rethos/blob/main/README.en.md))
+简体中文 | [English](https://github.com/Basaltic/rethos/blob/main/README.en.md)
 
 # Rethos 
 
