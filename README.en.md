@@ -11,7 +11,6 @@ A small, simple but powerful proxy based state management libaray in react.
 * **Auto Subscribition**, no select function needed, make code clean
 * **Flux Architecture**, simpified flux architecture, state only can be changed in actions
 
-**It's not stable for now. Before v1.0, the api may be change.**
 # Installation
 
 ```bash
