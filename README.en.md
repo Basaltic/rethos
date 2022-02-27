@@ -7,7 +7,6 @@
 
 A small, simple but powerful proxy based state management libaray in react. 
 
-* **Small**, about 1kb gzip
 * **Minimal Api**, only one api to create store (or store family), no extra boilerplate
 * **Auto Subscribition**, no select function needed, make code clean
 * **Flux Architecture**, simpified flux architecture, state only can be changed in actions
