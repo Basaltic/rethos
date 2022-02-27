@@ -1,21 +1,23 @@
+[简体中文]() | English
+
 # Rethos 
 
 [![NPM Version](https://img.shields.io/npm/v/rethos?style=flat&colorA=brightgreen&colorB=lightgrey)](https://www.npmjs.com/package/rethos)
 [![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/result?p=zustand)
 
-小巧、简洁、强大的React状态管理库。
+A small, simple but powerful proxy based state management libaray in react. 
 
 * **Minimal Api**, only one api to create store (or store family), no extra boilerplate
 * **Auto Subscribition**, no select function needed, make code clean
 * **Flux Architecture**, simpified flux architecture, state only can be changed in actions
 * **Small**, about 1kb gzip
-# 安装
+# Installation
 
 ```bash
 npm install rethos # or yarn add rethos or pnpm add rethos
 ```
 
-# 基础使用示例
+# Basic Example
 
 ```tsx
 import rethos from 'rethos';
@@ -66,7 +68,7 @@ const CounterComponent2 = () => {
 
 ```
 
-# 接口详情
+# Api Details
 
 ```ts
 /**
