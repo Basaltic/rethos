@@ -31,6 +31,11 @@ export interface ISingleStoreConfigs {
 export class SingleStore<S extends TState, A extends TAction<S>> {
   configs?: ISingleStoreConfigs;
 
+  /**
+   * The original(default) state object.
+   * - This object mainly used as the "identifier"
+   * - NEVER change the value in any proxy
+   */
   originalState: any;
   originalAction?: A;
 
@@ -45,6 +50,11 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    * update func -> set of prop key set
    */
   updateToPropKeySetMap = new WeakMap<any, Set<any>>();
+
+  /**
+   * update func -> obj -> proxy
+   */
+  rawToProxyMap = new WeakMap<any, WeakMap<any, any>>();
 
   /**
    * collect the "update func" in an action
@@ -63,14 +73,18 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   /**
    * Get State
    *
-   * @param updateFunc Called when the subscribed prop value changed
+   * @param updateFunc Called when the subscribed prop value changed; also it can be considered as identifier
    * @returns
    */
-  public getState(updateFunc?: () => void) {
-    return this.createProxyState(this.originalState, updateFunc);
+  getState(updateFunc: () => void) {
+    const proxyState = this.getProxyState(this.originalState, updateFunc);
+    return proxyState;
   }
 
-  public getAction() {
+  /**
+   * Get Actions
+   */
+  getAction() {
     if (this.originalAction) {
       if (!this.proxyAction) {
         const proxyState = this.createProxyStateInAction(this.originalState);
@@ -86,12 +100,35 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    *
    * @param updateFunc func subscribted to the state
    */
-  public cleanUpdate(updateFunc: () => void) {
+  cleanUpdate(updateFunc: () => void) {
     const updateFuncSet = this.updateToPropKeySetMap.get(updateFunc);
     updateFuncSet?.forEach((set: Set<any>) => {
       set.delete(updateFunc);
     });
     this.updateToPropKeySetMap.delete(updateFunc);
+    this.rawToProxyMap.delete(updateFunc);
+  }
+
+  /**
+   * Get Proxy State
+   *
+   * @param state
+   * @param updateFunc
+   * @returns
+   */
+  private getProxyState(state: S, updateFunc?: () => void) {
+    let rawToProxyMap = this.rawToProxyMap.get(updateFunc);
+    if (!rawToProxyMap) {
+      rawToProxyMap = new WeakMap();
+      this.rawToProxyMap.set(updateFunc, rawToProxyMap);
+    }
+
+    let proxyState = rawToProxyMap.get(state);
+    if (!proxyState) {
+      proxyState = this.createProxyState(state, updateFunc);
+      rawToProxyMap.set(state, proxyState);
+    }
+    return proxyState;
   }
 
   /**
@@ -104,14 +141,15 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
     return new Proxy(state, {
       get: (target: S, propKey: string) => {
         const value = Reflect.get(target, propKey);
+
         if (isObject(value)) {
           return this.createProxyStateInAction(value) as any;
         }
+
         return value;
       },
       set: (target: S, propKey: string, value: any) => {
-        // change the original value
-        // the set op will immediately get the latest change
+        // only change the actual state internally
         Reflect.set(target, propKey, value);
 
         // collect the update
@@ -137,7 +175,7 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   private createProxyState(state: S, updateFunc?: () => void): S {
     return new Proxy(state, {
       get: (target: S, propKey: string) => {
-        const value = Reflect.get(target, propKey);
+        const originalValue = Reflect.get(target, propKey);
 
         if (updateFunc) {
           let targetPropUpdateMap = this.observableUpdateMap.get(target);
@@ -165,11 +203,11 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
           }
         }
 
-        if (isObject(value)) {
-          return this.createProxyState(value, updateFunc) as any;
+        if (isObject(originalValue)) {
+          return this.createProxyState(originalValue, updateFunc) as any;
         }
 
-        return value;
+        return originalValue;
       },
       set: () => {
         throw new Error('state value only can be changed in actions');
@@ -211,7 +249,7 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    */
   private commitActionUpdate() {
     if (this.updateCollectionSet.size > 0) {
-      this.updateCollectionSet.forEach((update) => {
+      this.updateCollectionSet.forEach(update => {
         update?.();
       });
 
@@ -224,9 +262,9 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    */
   private collectUpdate(target: any, propKey: string) {
     const targetUpdateStore = this.observableUpdateMap.get(target);
-    let keyUpdateSet = targetUpdateStore?.get(propKey);
+    const keyUpdateSet = targetUpdateStore?.get(propKey);
 
-    keyUpdateSet?.forEach((u) => {
+    keyUpdateSet?.forEach(u => {
       this.updateCollectionSet.add(u);
     });
   }

@@ -19,7 +19,7 @@ export type StoreConfig = Omit<ISingleStoreConfigs, 'id'>;
 export function createStore<S extends TState, A extends TAction<S>>(
   state: S,
   action: A,
-  config?: StoreConfig,
+  config?: StoreConfig
 ): [(id?: Id) => S, (id?: Id) => ExtractAction<A>] {
   if (!isObject(state)) {
     throw new Error('object required');
@@ -39,7 +39,9 @@ export function createStore<S extends TState, A extends TAction<S>>(
     if (id) {
       let store = storeMap[id];
       if (!store) {
-        let store = new SingleStore<S, A>(state, action, { ...config, id });
+        // quickly clone the state
+        const ss = JSON.parse(JSON.stringify(state));
+        store = new SingleStore<S, A>(ss, action, { ...config, id });
         storeMap[id] = store;
       }
       return store;
@@ -66,12 +68,13 @@ export function createStore<S extends TState, A extends TAction<S>>(
       return store.getState(forceUpdate);
     }, [id, forceUpdate]);
 
-    useEffect(() => {
-      return () => {
+    useEffect(
+      () => () => {
         const store = getStore(id);
         store.cleanUpdate(forceUpdate);
-      };
-    }, [id, forceUpdate]);
+      },
+      [id, forceUpdate]
+    );
 
     return state;
   };

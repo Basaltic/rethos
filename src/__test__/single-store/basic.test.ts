@@ -7,13 +7,13 @@ const createStore = () => {
       count: 1,
     },
     {
-      inc: (s) => {
+      inc: s => {
         s.count += 1;
       },
-      dec: (s) => {
+      dec: s => {
         s.count -= 1;
       },
-    },
+    }
   );
 
   return store;
@@ -21,7 +21,10 @@ const createStore = () => {
 
 it('simple counter test', () => {
   const store = createStore();
-  const state = store.getState();
+
+  const uf1 = () => {};
+
+  const state = store.getState(uf1);
   const action = store.getAction();
 
   expect(state.count).toBe(1);

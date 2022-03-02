@@ -10,15 +10,20 @@ const createStore = () => {
       },
     },
     {
-      inc: (s) => {
+      inc: s => {
         s.count += 1;
         s.app.count += 1;
       },
-      dec: (s) => {
+      dec: s => {
         s.count -= 1;
         s.app.count -= 1;
       },
-    },
+      changeApp: s => {
+        s.app = {
+          count: 10,
+        };
+      },
+    }
   );
 
   return store;
@@ -26,7 +31,10 @@ const createStore = () => {
 
 it('simple nest counter test', () => {
   const store = createStore();
-  const state = store.getState();
+
+  const uf1 = () => {};
+
+  const state = store.getState(uf1);
   const action = store.getAction();
 
   expect(state.app.count).toBe(1);
@@ -40,6 +48,9 @@ it('simple nest counter test', () => {
   action.inc();
   action.inc();
   expect(state.app.count).toBe(3);
+
+  action.changeApp();
+  expect(state.app.count).toBe(10);
 });
 
 it('multi nest count test', () => {

@@ -10,15 +10,15 @@ const createStore = () => {
       },
     },
     {
-      inc: (s) => {
+      inc: s => {
         s.count += 1;
         s.app.count += 1;
       },
-      dec: (s) => {
+      dec: s => {
         s.count -= 1;
         s.app.count -= 1;
       },
-    },
+    }
   );
 
   return store;
@@ -53,8 +53,6 @@ it('multi nest count test', () => {
   expect(state1.app.count).toBe(1);
   expect(state2.app.count).toBe(1);
   expect(state3.app.count).toBe(1);
-
-  console.log(store.observableUpdateMap.get(store.originalState).get('count'));
 
   expect(store.updateToPropKeySetMap.get(uf1)).toBeDefined();
   expect(store.observableUpdateMap.get(store.originalState).get('count').size).toBe(1);
