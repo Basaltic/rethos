@@ -1,3 +1,12 @@
+# v0.4.0
+
+* 支持 store family 的创建
+* 完善文档
+
+---
+
+* suport store family
+* improve docs
 # v0.3.1
 
 * 添加config参数
