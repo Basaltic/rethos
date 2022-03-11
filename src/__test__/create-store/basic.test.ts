@@ -19,19 +19,18 @@ const createTestStore = () => {
   return store;
 };
 
-const setUp = (useState: any, useAction) => {
+const setUp = (useState: any) => {
   return renderHook(() => {
     const { count } = useState();
-    const action = useAction();
-    return { count, action };
+    return { count };
   });
 };
 
 it('test hooks: simple counter', () => {
-  const [useState, useAction] = createTestStore();
-  const { result } = setUp(useState, useAction);
+  const [useState, getActions] = createTestStore();
+  const { result } = setUp(useState);
 
-  const action = result.current.action;
+  const action = getActions();
 
   expect(result.current.count).toBe(1);
 
@@ -52,13 +51,13 @@ it('test hooks: simple counter', () => {
 });
 
 it('test hooks: multi count test', () => {
-  const [useState, useAction] = createTestStore();
+  const [useState, getActions] = createTestStore();
 
-  const result1 = setUp(useState, useAction).result;
-  const result2 = setUp(useState, useAction).result;
-  const result3 = setUp(useState, useAction).result;
+  const result1 = setUp(useState).result;
+  const result2 = setUp(useState).result;
+  const result3 = setUp(useState).result;
 
-  const action = result1.current.action;
+  const action = getActions();
 
   expect(result1.current.count).toBe(1);
   expect(result2.current.count).toBe(1);

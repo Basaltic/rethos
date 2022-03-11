@@ -3,7 +3,7 @@ import { useForceUpdate } from './hooks/use-force-update';
 import { TState, TAction, ExtractAction, SingleStore, ISingleStoreConfigs } from './lib/single-store';
 import { isObject } from './utils/is-object';
 
-type Id = string | symbol;
+type Id = string | number | symbol;
 
 type StoreMap<S extends TState, A extends TAction<S>> = { [key: Id]: SingleStore<S, A> };
 
@@ -19,8 +19,8 @@ export type StoreConfig = Omit<ISingleStoreConfigs, 'id'>;
 export function createStore<S extends TState, A extends TAction<S>>(
   state: S,
   action: A,
-  config?: StoreConfig
-): [(id?: Id) => S, (id?: Id) => ExtractAction<A>] {
+  config?: StoreConfig,
+): [(id?: Id) => S, (id?: Id) => ExtractAction<A>, (id?: Id) => S] {
   if (!isObject(state)) {
     throw new Error('object required');
   }
@@ -73,7 +73,7 @@ export function createStore<S extends TState, A extends TAction<S>>(
         const store = getStore(id);
         store.cleanUpdate(forceUpdate);
       },
-      [id, forceUpdate]
+      [id, forceUpdate],
     );
 
     return state;
@@ -85,10 +85,19 @@ export function createStore<S extends TState, A extends TAction<S>>(
    * @param id
    * @returns
    */
-  const getActions = (id?: Id) => {
+  const getAction = (id?: Id) => {
     const action = getStore(id).getAction();
     return action;
   };
 
-  return [useState, getActions];
+  /**
+   * Get the State
+   * @param id
+   * @returns
+   */
+  const getState = (id?: Id) => {
+    return getStore(id).getState();
+  };
+
+  return [useState, getAction, getState];
 }

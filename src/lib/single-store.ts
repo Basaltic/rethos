@@ -1,5 +1,6 @@
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
 import { isObject } from '../utils/is-object';
+import { errors } from './error';
 
 type DropFirst<T extends unknown[]> = T extends [any, ...infer U] ? U : never;
 
@@ -37,14 +38,24 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    * - NEVER change the value in any proxy
    */
   originalState: any;
+  /**
+   * The original action passed
+   */
   originalAction?: A;
-
+  /**
+   * Proxied Action
+   */
   proxyAction!: TProxyAction;
 
   /**
    * state -> propKey -> <update func> set
    */
   observableUpdateMap = new WeakMap<any, Map<any, Set<any>>>();
+
+  /**
+   * array -> <update func> set
+   */
+  observableArrayUpdateMap = new WeakMap<any, Set<any>>();
 
   /**
    * update func -> set of prop key set
@@ -76,7 +87,7 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    * @param updateFunc Called when the subscribed prop value changed; also it can be considered as identifier
    * @returns
    */
-  getState(updateFunc: () => void) {
+  getState(updateFunc?: () => void) {
     const proxyState = this.getProxyState(this.originalState, updateFunc);
     return proxyState;
   }
@@ -139,8 +150,10 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    */
   private createProxyStateInAction(state: S): S {
     return new Proxy(state, {
-      get: (target: S, propKey: string) => {
-        const value = Reflect.get(target, propKey);
+      get: (target: S, propKey: string, receiver) => {
+        const value = Reflect.get(target, propKey, receiver);
+
+        console.log(target, propKey, value);
 
         if (isObject(value)) {
           return this.createProxyStateInAction(value) as any;
@@ -149,11 +162,20 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
         return value;
       },
       set: (target: S, propKey: string, value: any) => {
-        // only change the actual state internally
-        Reflect.set(target, propKey, value);
+        const oldValue = Reflect.get(target, propKey);
 
-        // collect the update
-        this.collectUpdate(target, propKey);
+        console.log(target, propKey, value, oldValue);
+        // const isTargetArray = Array.isArray(target);
+        // if (isTargetArray) {
+
+        // }
+
+        if (oldValue !== value) {
+          Reflect.set(target, propKey, value);
+
+          // collect the update
+          this.collectUpdate(target, propKey);
+        }
 
         return true;
       },
@@ -174,35 +196,15 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    */
   private createProxyState(state: S, updateFunc?: () => void): S {
     return new Proxy(state, {
-      get: (target: S, propKey: string) => {
-        const originalValue = Reflect.get(target, propKey);
+      get: (target: S, propKey: string, receiver) => {
+        console.log(target, propKey, receiver);
+        const isArray = Array.isArray(target);
 
-        if (updateFunc) {
-          let targetPropUpdateMap = this.observableUpdateMap.get(target);
-          if (!targetPropUpdateMap) {
-            targetPropUpdateMap = new Map();
-            this.observableUpdateMap.set(target, targetPropUpdateMap);
-          }
+        if (updateFunc) this.trackUpdate(target, propKey, updateFunc);
 
-          let propKeyUpdateSet = targetPropUpdateMap.get(propKey);
-          if (!propKeyUpdateSet) {
-            propKeyUpdateSet = new Set();
-            targetPropUpdateMap.set(propKey, propKeyUpdateSet);
-          }
+        if (isArray) return target[propKey];
 
-          if (!propKeyUpdateSet.has(updateFunc)) {
-            propKeyUpdateSet.add(updateFunc);
-
-            let updateFuncSet = this.updateToPropKeySetMap.get(updateFunc);
-            if (!updateFuncSet) {
-              updateFuncSet = new Set();
-              this.updateToPropKeySetMap.set(updateFunc, updateFuncSet);
-            }
-
-            updateFuncSet.add(propKeyUpdateSet);
-          }
-        }
-
+        const originalValue = Reflect.get(target, propKey, receiver);
         if (isObject(originalValue)) {
           return this.createProxyState(originalValue, updateFunc) as any;
         }
@@ -210,10 +212,13 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
         return originalValue;
       },
       set: () => {
-        throw new Error('state value only can be changed in actions');
+        throw new Error(errors[1]);
+      },
+      defineProperty: () => {
+        throw new Error(errors[1]);
       },
       deleteProperty: () => {
-        throw new Error('state value only can be changed in actions');
+        throw new Error(errors[1]);
       },
     }) as S;
   }
@@ -228,15 +233,16 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   private createProxyAction(action: TAction<S>, state: S): TProxyAction {
     return new Proxy(action, {
       get: (target: TAction<S>, prop: string) => {
-        const action = target[prop];
+        const rawAction = target[prop];
         return (...args: any) => {
           try {
-            action(state, ...args);
+            const doAction = () => rawAction(state, ...args);
+            doAction();
 
             if (typeof reactBatchUpdate === 'function') {
-              reactBatchUpdate(this.commitActionUpdate.bind(this));
+              reactBatchUpdate(this.commitUpdate.bind(this));
             } else {
-              this.commitActionUpdate();
+              this.commitUpdate();
             }
           } catch (e) {}
         };
@@ -247,9 +253,9 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   /**
    * Actually Commit the State Update After Action
    */
-  private commitActionUpdate() {
+  private commitUpdate() {
     if (this.updateCollectionSet.size > 0) {
-      this.updateCollectionSet.forEach(update => {
+      this.updateCollectionSet.forEach((update) => {
         update?.();
       });
 
@@ -258,13 +264,71 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   }
 
   /**
+   * Track Update
+   */
+  private trackUpdate(target: any, propKey: string | Symbol, updateFunc: () => void) {
+    const isArray = Array.isArray(target);
+
+    if (isArray) {
+      let updateSet = this.observableArrayUpdateMap.get(target);
+      if (!updateSet) {
+        updateSet = new Set();
+        this.observableArrayUpdateMap.set(target, updateSet);
+      }
+      if (!updateSet.has(updateFunc)) {
+        updateSet.add(updateFunc);
+
+        let updateFuncSet = this.updateToPropKeySetMap.get(updateFunc);
+        if (!updateFuncSet) {
+          updateFuncSet = new Set();
+          this.updateToPropKeySetMap.set(updateFunc, updateFuncSet);
+        }
+
+        updateFuncSet.add(updateSet);
+      }
+    } else {
+      let targetPropUpdateMap = this.observableUpdateMap.get(target);
+      if (!targetPropUpdateMap) {
+        targetPropUpdateMap = new Map();
+        this.observableUpdateMap.set(target, targetPropUpdateMap);
+      }
+
+      let updateSet = targetPropUpdateMap.get(propKey);
+      if (!updateSet) {
+        updateSet = new Set();
+        targetPropUpdateMap.set(propKey, updateSet);
+      }
+
+      if (!updateSet.has(updateFunc)) {
+        updateSet.add(updateFunc);
+
+        let updateFuncSet = this.updateToPropKeySetMap.get(updateFunc);
+        if (!updateFuncSet) {
+          updateFuncSet = new Set();
+          this.updateToPropKeySetMap.set(updateFunc, updateFuncSet);
+        }
+
+        updateFuncSet.add(updateSet);
+      }
+    }
+  }
+
+  /**
    * Collect Update
    */
   private collectUpdate(target: any, propKey: string) {
-    const targetUpdateStore = this.observableUpdateMap.get(target);
-    const keyUpdateSet = targetUpdateStore?.get(propKey);
+    const isArray = Array.isArray(target);
 
-    keyUpdateSet?.forEach(u => {
+    let keyUpdateSet;
+    if (isArray) {
+      keyUpdateSet = this.observableArrayUpdateMap.get(target);
+    } else {
+      const targetUpdateStore = this.observableUpdateMap.get(target);
+
+      keyUpdateSet = targetUpdateStore?.get(propKey);
+    }
+
+    keyUpdateSet?.forEach((u) => {
       this.updateCollectionSet.add(u);
     });
   }
