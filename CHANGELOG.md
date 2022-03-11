@@ -1,3 +1,13 @@
+# 0.5.0
+
+* 支持自动订阅数组对象
+* 添加额外的文档目录
+
+---
+
+* suport auto subscribe array value
+* add doc folder
+
 # v0.4.0
 
 * 支持 store family 的创建
