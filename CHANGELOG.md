@@ -1,10 +1,14 @@
 # 0.6.0
 
+* 最后稳定了接口的风格，createStore 函数会返回一个对象，包含各种方法和react hook方法
+* 支持嵌套的action执行自动合并提交更新
+* 增加了文档目录中的例子和样式
 
 ---
 
 * make the api stable, finally, the createStore function wil return a object with functions & hooks
-* 
+* support auto-batch update in nested actions
+* improve examples in doc folder
 
 # 0.5.0
 
