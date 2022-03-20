@@ -1,3 +1,11 @@
+# 0.6.0
+
+
+---
+
+* make the api stable, finally, the createStore function wil return a object with functions & hooks
+* 
+
 # 0.5.0
 
 * 支持自动订阅数组对象

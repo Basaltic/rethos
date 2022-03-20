@@ -3,7 +3,6 @@ import { isObject } from '../utils/is-object';
 import { errors } from './error';
 import { TState, TAction, TProxyAction, ExtractAction } from './types';
 
-
 /**
  * Extra Configs of the single store
  */
@@ -63,6 +62,11 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
    * collect the "update func" in an action
    */
   updateCollectionSet = new Set<any>();
+
+  /**
+   * Track the execution of the action
+   */
+  actionExecutionStack: Function[] = [];
 
   constructor(state: S, action: A, configs?: ISingleStoreConfigs) {
     this.configs = configs;
@@ -145,8 +149,6 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
       get: (target: S, propKey: string, receiver) => {
         const value = Reflect.get(target, propKey, receiver);
 
-        console.log(target, propKey, value);
-
         if (isObject(value)) {
           return this.createProxyStateInAction(value) as any;
         }
@@ -155,12 +157,6 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
       },
       set: (target: S, propKey: string, value: any) => {
         const oldValue = Reflect.get(target, propKey);
-
-        console.log(target, propKey, value, oldValue);
-        // const isTargetArray = Array.isArray(target);
-        // if (isTargetArray) {
-
-        // }
 
         if (oldValue !== value) {
           Reflect.set(target, propKey, value);
@@ -189,7 +185,6 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
   private createProxyState(state: S, updateFunc?: () => void): S {
     return new Proxy(state, {
       get: (target: S, propKey: string, receiver) => {
-        console.log(target, propKey, receiver);
         const isArray = Array.isArray(target);
 
         if (updateFunc) this.trackUpdate(target, propKey, updateFunc);
@@ -229,17 +224,46 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
         return (...args: any) => {
           try {
             const doAction = () => rawAction(state, ...args);
-            doAction();
 
-            if (typeof reactBatchUpdate === 'function') {
-              reactBatchUpdate(this.commitUpdate.bind(this));
-            } else {
-              this.commitUpdate();
+            this.actionExecutionStack.push(doAction);
+            doAction();
+            this.actionExecutionStack.pop();
+
+            const isExecuting = this.actionExecutionStack.length > 0;
+            if (!isExecuting) {
+              if (typeof reactBatchUpdate === 'function') {
+                reactBatchUpdate(this.commitUpdate.bind(this));
+              } else {
+                this.commitUpdate();
+              }
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error(e);
+            this.actionExecutionStack = [];
+          }
         };
       },
     }) as TProxyAction;
+  }
+
+  /**
+   * Collect update duration the action executation
+   */
+  private collectUpdate(target: any, propKey: string) {
+    const isArray = Array.isArray(target);
+
+    let keyUpdateSet;
+    if (isArray) {
+      keyUpdateSet = this.observableArrayUpdateMap.get(target);
+    } else {
+      const targetUpdateStore = this.observableUpdateMap.get(target);
+
+      keyUpdateSet = targetUpdateStore?.get(propKey);
+    }
+
+    keyUpdateSet?.forEach((u) => {
+      this.updateCollectionSet.add(u);
+    });
   }
 
   /**
@@ -303,25 +327,5 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
         updateFuncSet.add(updateSet);
       }
     }
-  }
-
-  /**
-   * Collect Update
-   */
-  private collectUpdate(target: any, propKey: string) {
-    const isArray = Array.isArray(target);
-
-    let keyUpdateSet;
-    if (isArray) {
-      keyUpdateSet = this.observableArrayUpdateMap.get(target);
-    } else {
-      const targetUpdateStore = this.observableUpdateMap.get(target);
-
-      keyUpdateSet = targetUpdateStore?.get(propKey);
-    }
-
-    keyUpdateSet?.forEach((u) => {
-      this.updateCollectionSet.add(u);
-    });
   }
 }

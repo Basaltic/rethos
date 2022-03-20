@@ -19,7 +19,8 @@
     "build": "tsc && vite build && tsc --outDir dist",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "dev:exp": "cd doc && vite"
   },
   "devDependencies": {
     "@testing-library/react-hooks": "^7.0.2",

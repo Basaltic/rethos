@@ -30,13 +30,13 @@ const setUp = (useState: any, id?: string) => {
 };
 
 it('test hooks: simple family counter', () => {
-  const [useState, getActions] = createTestStore();
+  const store = createTestStore();
 
-  const result = setUp(useState, '1').result;
-  const result2 = setUp(useState, '2').result;
+  const result = setUp(store.useState, '1').result;
+  const result2 = setUp(store.useState, '2').result;
 
-  const action = getActions('1');
-  const action2 = getActions('2');
+  const action = store.getActions('1');
+  const action2 = store.getActions('2');
 
   expect(result.current.count).toBe(1);
   expect(result2.current.count).toBe(1);
