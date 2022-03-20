@@ -17,36 +17,31 @@
 npm install rethos # or yarn add rethos or pnpm add rethos
 ```
 
-# 基础使用示例
+# 如何使用？
 
-```tsx
+## 1. 首先创建一个Store
+
+创建一个Store，并分别传入默认的状态和action 方法，返回一个实例对象
+
+```ts
 import rethos from 'rethos';
 
-// 创建一个 Store，并传入默认的状态 和 action 方法，返回一个数组（包含两个 Hook 函数）
-// 1. 订阅、获取状态的hook
-// 2. 获取action方法，可以使用在任何地方
-const [useCouterState, getCouterActions] = rethos.createStore(
+const counterStore = rethos.createStore(
+  { count: 1 },
   {
-    count: 1,
-  },
-  {
-    inc: (s, gap?) => {
-      s.count += gap || 1;
-    },
-    dec: (s) => {
-      s.count -= 1;
-    },
+    inc: (s, gap) => (s.count += gap || 1)},
+    dec: (s) => (s.count -= 1),
   },
 );
+```
+## 2. 绑定组件
 
+在组件中使用需要绑定的store的hook函数，rethos会自动绑定，并在值发生变化是自动触发组件的更新
+
+```tsx
 const CounterComponent1 = () => {
-
-  // 调用hook，放置在组件的顶部 （遵循hook的规范）
-  // 析构需要的状态，rethos 会自动订阅相关状态，并且在值变更的时候自动触发组件渲染
-  const { count } = useCouterState()
-  // 获取actions
-  const { inc, dec } = getCouterActions()
-
+  const { count } = counterStore.useState()
+  const { inc, dec } = counterStore.getActions();
   return <div>
     <div>count: {count}</div>
     <div>
@@ -66,8 +61,9 @@ const CounterComponent2 = () => {
 
 ```
 
-# 接口详情
 
+# 接口详情
+## 创建Store接口
 ```ts
 /**
  * 创建Store
@@ -76,7 +72,7 @@ const CounterComponent2 = () => {
  * @param {Object} action 一组修改状态的action方法
  * @returns [useState, getActions]
  */
-export function createStore<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S,  (id?: Id) => Record<keyof A, () => void>] {
+function createStore<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S,  (id?: Id) => Record<keyof A, () => void>] {
 
   /**
    * 状态hook，用于组件中自动订阅
@@ -92,7 +88,7 @@ export function createStore<S extends TState, A = TAction<S>>(state: S, action?:
    */
   function getActions(id?: string): Record<keyof A, () => void> {}
 
-  return [useState, getActions]
+  return {useState, getActions}
 }
 
 

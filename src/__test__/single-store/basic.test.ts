@@ -7,13 +7,13 @@ const createStore = () => {
       count: 1,
     },
     {
-      inc: s => {
+      inc: (s) => {
         s.count += 1;
       },
-      dec: s => {
+      dec: (s) => {
         s.count -= 1;
       },
-    }
+    },
   );
 
   return store;

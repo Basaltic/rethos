@@ -1,4 +1,4 @@
-import type { TState } from './single-store';
+import { TState } from './types';
 
 /**
  * A middleware is function that is used to add extra logic before or after action
