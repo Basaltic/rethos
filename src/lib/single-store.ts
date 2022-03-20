@@ -149,6 +149,12 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
       get: (target: S, propKey: string, receiver) => {
         const value = Reflect.get(target, propKey, receiver);
 
+        const isArray = Array.isArray(target);
+
+        if (isArray) {
+          return target[propKey];
+        }
+
         if (isObject(value)) {
           return this.createProxyStateInAction(value) as any;
         }
@@ -189,7 +195,9 @@ export class SingleStore<S extends TState, A extends TAction<S>> {
 
         if (updateFunc) this.trackUpdate(target, propKey, updateFunc);
 
-        if (isArray) return target[propKey];
+        if (isArray) {
+          return target[propKey];
+        }
 
         const originalValue = Reflect.get(target, propKey, receiver);
         if (isObject(originalValue)) {

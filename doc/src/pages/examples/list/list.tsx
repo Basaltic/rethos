@@ -9,9 +9,7 @@ const listStore = createStore(
     push: (s, id: string) => s.itemIds.push(id),
     pop: (s) => s.itemIds.pop(),
     delete: (s, i: number) => {
-      console.log('delete');
       s.itemIds.splice(i, 1);
-      console.log(JSON.stringify(s));
     },
   },
 );
