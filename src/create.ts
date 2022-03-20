@@ -1,11 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { useForceUpdate } from './hooks/use-force-update';
-import { TState, TAction, ExtractAction, SingleStore, ISingleStoreConfigs } from './lib/single-store';
+import { ISingleStoreConfigs } from './lib/single-store';
+import { StoreFaimly } from './lib/store-family';
+import { TState, TAction, ExtractAction, StoreId } from './lib/types';
 import { isObject } from './utils/is-object';
-
-type Id = string | number | symbol;
-
-type StoreMap<S extends TState, A extends TAction<S>> = { [key: Id]: SingleStore<S, A> };
 
 export type StoreConfig = Omit<ISingleStoreConfigs, 'id'>;
 
@@ -16,88 +14,51 @@ export type StoreConfig = Omit<ISingleStoreConfigs, 'id'>;
  * @param {TAction} action a collection of action that change the state in the store
  * @returns [useState, getActions]
  */
-export function createStore<S extends TState, A extends TAction<S>>(
-  state: S,
-  action: A,
-  config?: StoreConfig,
-): [(id?: Id) => S, (id?: Id) => ExtractAction<A>, (id?: Id) => S] {
+export function createStore<S extends TState, A extends TAction<S>>(state: S, action: A, config?: StoreConfig) {
   if (!isObject(state)) {
     throw new Error('object required');
   }
 
-  const storeMap: StoreMap<S, A> = {};
+  const storeFaimly = new StoreFaimly<S, A>(state, action, config);
 
-  let defaultStore: SingleStore<S, A>;
+  return {
+    /**
+     * State auto-subscribe hook, bind it to the react FC component
+     *
+     * @param {StoreId} [id]
+     * @returns
+     */
+    useState: (id?: StoreId) => {
+      const forceUpdate = useForceUpdate();
 
-  /**
-   * Lazy init & get store by id
-   *
-   * @param id
-   * @returns
-   */
-  const getStore = (id?: Id) => {
-    if (id) {
-      let store = storeMap[id];
-      if (!store) {
-        // quickly clone the state
-        const ss = JSON.parse(JSON.stringify(state));
-        store = new SingleStore<S, A>(ss, action, { ...config, id });
-        storeMap[id] = store;
-      }
-      return store;
-    }
+      const state = useMemo(() => {
+        const store = storeFaimly.getStore(id);
+        return store.getState(forceUpdate);
+      }, [id, forceUpdate]);
 
-    if (!defaultStore) {
-      defaultStore = new SingleStore<S, A>(state, action, { ...config, id: '' });
-    }
+      useEffect(
+        () => () => {
+          const store = storeFaimly.getStore(id);
+          store.cleanUpdate(forceUpdate);
+        },
+        [id, forceUpdate],
+      );
 
-    return defaultStore;
+      return state as S;
+    },
+    /**
+     * Get the state which can only be read but not modified
+     *
+     * @param {StoreId} [id]
+     * @returns
+     */
+    getState: (id?: StoreId) => storeFaimly.getStore(id).getState() as S,
+    /**
+     * Get actions of the store
+     *
+     * @param {StoreId} [id]
+     * @returns
+     */
+    getActions: (id?: StoreId) => storeFaimly.getStore(id).getAction() as ExtractAction<A>,
   };
-
-  /**
-   * State Hook
-   *
-   * @param id
-   * @returns
-   */
-  const useState = (id?: Id) => {
-    const forceUpdate = useForceUpdate();
-
-    const state = useMemo(() => {
-      const store = getStore(id);
-      return store.getState(forceUpdate);
-    }, [id, forceUpdate]);
-
-    useEffect(
-      () => () => {
-        const store = getStore(id);
-        store.cleanUpdate(forceUpdate);
-      },
-      [id, forceUpdate],
-    );
-
-    return state;
-  };
-
-  /**
-   * Get Action
-   *
-   * @param id
-   * @returns
-   */
-  const getAction = (id?: Id) => {
-    const action = getStore(id).getAction();
-    return action;
-  };
-
-  /**
-   * Get the State
-   * @param id
-   * @returns
-   */
-  const getState = (id?: Id) => {
-    return getStore(id).getState();
-  };
-
-  return [useState, getAction, getState];
 }

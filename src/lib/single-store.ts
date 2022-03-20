@@ -1,16 +1,8 @@
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
 import { isObject } from '../utils/is-object';
 import { errors } from './error';
+import { TState, TAction, TProxyAction, ExtractAction } from './types';
 
-type DropFirst<T extends unknown[]> = T extends [any, ...infer U] ? U : never;
-
-export type TState = Record<string, any>;
-export type TAction<S> = { [key: string]: (s: S, ...args: any) => any };
-export type TProxyAction = { [key: string]: () => void };
-
-export type ExtractAction<A extends TAction<any>> = {
-  [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
-};
 
 /**
  * Extra Configs of the single store
