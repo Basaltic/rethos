@@ -30,10 +30,17 @@ export class StoreStateUpdateTracker {
   updateCollectionSet = new Set<any>();
 
   /**
-   *
+   * Cleanup tracks
    * @param updateFn
    */
-  cleanup(updateFn: TUpdateFn) {}
+  cleanup(updateFn: TUpdateFn) {
+    const updateFuncSet = this.updateToPropKeySetMap.get(updateFn);
+    updateFuncSet?.forEach((set: Set<any>) => {
+      set.delete(updateFn);
+    });
+    this.updateToPropKeySetMap.delete(updateFn);
+    this.rawToProxyMap.delete(updateFn);
+  }
 
   /**
    * Track Update
