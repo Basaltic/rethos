@@ -11,6 +11,8 @@
 * **自动订阅**：用到哪个状态就自动订阅该状态并变更，不需要写任何的 select 函数来手动指定
 * **Flux架构**：遵循简化的flux架构，使得状态更可控和管理
 
+**⚠️：处于开发中，1.0之前api不稳定**
+
 # 安装
 
 ```bash
@@ -19,9 +21,9 @@ npm install rethos # or yarn add rethos or pnpm add rethos
 
 # 如何使用？
 
-## 1. 首先创建一个Store
+## 1. 定义数据存储
 
-创建一个Store，并分别传入默认的状态和action 方法，返回一个实例对象
+定义 & 创建数据存储，并分别传入默认的状态和action 方法，返回一个实例对象
 
 ```ts
 import rethos from 'rethos';

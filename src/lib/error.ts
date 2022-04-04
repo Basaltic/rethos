@@ -1,4 +1,5 @@
 export const errors = {
+  0: 'state must be an object',
   1: 'state value only can be changed in actions',
 };
 

@@ -1,5 +1,5 @@
 import { RouteObject } from 'react-router-dom';
-import { ListPage } from './pages/examples/list';
+// import { ListPage } from './pages/examples/list';
 import { SimpleCounterPage } from './pages/examples/simple-counter';
 
 export interface SuperRouteObject extends RouteObject {
@@ -12,5 +12,5 @@ export const routes: SuperRouteObject[] = [
     path: '/',
     element: <SimpleCounterPage />,
   },
-  { name: '列表', path: 'team', element: <ListPage /> },
+  // { name: '列表', path: 'team', element: <ListPage /> },
 ];
