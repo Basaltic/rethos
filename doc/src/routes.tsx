@@ -1,5 +1,4 @@
 import { RouteObject } from 'react-router-dom';
-// import { ListPage } from './pages/examples/list';
 import { SimpleCounterPage } from './pages/examples/simple-counter';
 
 export interface SuperRouteObject extends RouteObject {
