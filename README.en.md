@@ -20,82 +20,13 @@ npm install rethos # or yarn add rethos or pnpm add rethos
 # Basic Example
 
 ```tsx
-import rethos from 'rethos';
 
-// create a store, define the default state & action & return two hooks
-// 1. state hook
-// 2. get action function
-const [useCouterState, getCouterActions] = rethos.createStore(
-  {
-    count: 1,
-  },
-  {
-    inc: (s, gap?) => {
-      s.count += gap || 1;
-    },
-    dec: (s) => {
-      s.count -= 1;
-    },
-  },
-);
-
-// Bind it in any functional component
-const CounterComponent1 = () => {
-
-  // add the hook at the top of component
-  // destruct the state and it will auto update if the state is changed, that's it
-  // you don't need to pass select functions
-  const { count } = useCouterState()
-  // call to get actions
-  const { inc, dec } = getCouterActions()
-
-  return <div>
-    <div>count: {count}</div>
-    <div>
-      <button onClick={inc}>Inc</button>
-      <button onClick={() => inc(10)}>Inc 10</button>
-      <button onClick={dec}>Dec</button>
-    </div>
-  </div>
-}
-
-const CounterComponent2 = () => {
-  const { count } = useCouterState()
-  return <div>
-    <div>count: {count}</div>
-  </div>
-}
 
 ```
 
 # Api Details
 
 ```ts
-/**
- * Create A Store
- *
- * @param {Object} state a object represent the state, MUST BE A OBJECT!!
- * @param {TAction} action a collection of action that change the state in the store
- * @returns [useState, useAction]
- */
-export function createStore<S extends TState, A = TAction<S>>(state: S, action?: A): [(id?: Id) => S,  (id?: Id) => Record<keyof A, () => void>] {
-
-  /**
-   * State Subscribe & Fetch Hook
-   * 
-   * @param {string | undefined} id identify the state in the family
-   */
-  function useState(id?: string): S {}
-
-  /**
-   * Get Action Instance, can be called in anywhere
-   * 
-   * @param {string | undefined} id identify the action in the family
-   */
-  function getActions(id?: string): Record<keyof A, () => void> {}
-
-  return [useState, getActions]
-}
 
 
 ```

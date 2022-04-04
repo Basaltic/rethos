@@ -1,7 +1,7 @@
 {
   "name": "rethos",
   "private": false,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "files": [
     "dist"
   ],
@@ -23,6 +23,7 @@
     "dev:exp": "cd doc && vite"
   },
   "devDependencies": {
+    "@testing-library/react": "^13.0.0",
     "@testing-library/react-hooks": "^7.0.2",
     "@types/node": "^17.0.18",
     "@types/react": "^17.0.39",
@@ -33,7 +34,7 @@
     "react-dom": "^17.0.2",
     "typescript": "^4.5.4",
     "vite": "^2.8.0",
-    "vitest": "^0.4.2"
+    "vitest": "^0.8.4"
   },
   "peerDependencies": {
     "react": ">=16.8"

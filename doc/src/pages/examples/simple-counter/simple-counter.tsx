@@ -1,12 +1,11 @@
 import React from 'react';
-import { createStore } from '../../../../../src/create';
+import { useStoreActions, useSubscribableState } from '../../../../../src/main';
 import { Page } from '../../../containers/page';
-
-const counterStore = createStore({ count: 0 }, { inc: (s) => (s.count += 1), des: (s) => (s.count -= 1) });
+import { ICounterActions, ICounterState } from './model';
 
 export const SimpleCounterPage = () => {
-  const state = counterStore.useState();
-  const actions = counterStore.getActions();
+  const state = useSubscribableState<ICounterState>(ICounterState);
+  const actions = useStoreActions<ICounterActions>(ICounterActions);
 
   const { count } = state;
 
@@ -19,7 +18,7 @@ export const SimpleCounterPage = () => {
           <button className="btn" onClick={() => actions.inc()}>
             增加
           </button>
-          <button className="btn" onClick={() => actions.des()}>
+          <button className="btn" onClick={() => actions.dec()}>
             减少
           </button>
         </div>

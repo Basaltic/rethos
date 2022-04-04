@@ -1,3 +1,11 @@
+# 0.7.0
+
+* 重新设计api，单体store，状态和行为分离
+
+--- 
+
+* redesign the api, one store, separate state and actions
+
 # 0.6.0
 
 * 最后稳定了接口的风格，createStore 函数会返回一个对象，包含各种方法和react hook方法
