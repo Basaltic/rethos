@@ -1,10 +1,12 @@
 import { createContext, useContext } from 'react';
 import { useForceUpdate } from '../hooks/use-force-update';
+import { createProxyAction, IStoreActions } from './store-actions';
 import { StoreActionsContainer } from './store-actions-container';
 import { StoreQuery } from './store-query';
+import { IStoreState } from './store-state';
 import { StoreStateContainer } from './store-state-container';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { IState, Type, IActions, TUpdateFn, Id } from './types';
+import { Type, TUpdateFn, Id } from './types';
 
 export interface IStore {
   /**
@@ -13,13 +15,13 @@ export interface IStore {
    * @param type
    * @param state
    */
-  addState<S extends IState>(type: Type, state: S): IStore;
+  addState<S extends IStoreState>(type: Type, state: S): IStore;
   /**
    * Add actions to the store
    * @param type
    * @param actions
    */
-  addActions<A extends IActions>(type: Type, actions: A): IStore;
+  addActions<A extends IStoreActions>(type: Type, actions: A): IStore;
 }
 
 export class Store {
@@ -27,34 +29,43 @@ export class Store {
 
   private actionsContainer: StoreActionsContainer;
 
+  /**
+   * Track the execution of the action
+   */
+  private actionExecutionStack: Function[] = [];
+
+  private query: StoreQuery;
+  private tracker: StoreStateUpdateTracker;
+
   constructor() {
     const tracker = new StoreStateUpdateTracker();
     const stateContainer = new StoreStateContainer(tracker);
-    const actionsCollection = new Map();
+    const actionsContainer = new StoreActionsContainer();
 
-    const query = new StoreQuery(stateContainer, actionsCollection);
-
-    const actionsContainer = new StoreActionsContainer(actionsCollection, query, tracker);
+    const query = new StoreQuery(stateContainer, actionsContainer);
 
     this.stateContainer = stateContainer;
     this.actionsContainer = actionsContainer;
+    this.query = query;
+    this.tracker = tracker;
   }
 
-  addState<S extends IState>(type: Type, state: S) {
+  addState<S extends IStoreState>(type: Type, state: S) {
     this.stateContainer.addState(type, state);
     return this;
   }
 
-  addActions<A extends IActions>(type: Type, actions: A) {
-    this.actionsContainer.addActions(type, actions);
+  addActions<A extends IStoreActions>(type: Type, actions: A) {
+    const proxyActions = createProxyAction(actions, this.query, this.tracker, this.actionExecutionStack);
+    this.actionsContainer.addActions(type, proxyActions);
     return this;
   }
 
-  getState<S extends IState>(type: Type, updateFn: TUpdateFn, id?: Id) {
+  getState<S extends IStoreState>(type: Type, updateFn: TUpdateFn, id?: Id) {
     return this.stateContainer.getSubscribableState<S>(type, updateFn, id);
   }
 
-  getActions<A extends IActions>(type: Type) {
+  getActions<A extends IStoreActions>(type: Type) {
     return this.actionsContainer.getActions<A>(type);
   }
 }
@@ -86,7 +97,7 @@ export const Provider = Context.Provider;
  * @param id
  * @returns
  */
-export function useSubscribableState<S extends IState>(type: Type, id?: Id) {
+export function useSubscribableState<S extends IStoreState>(type: Type, id?: Id) {
   const updateFn = useForceUpdate();
   const store = useContext(Context) as Store;
   const state = store.getState<S>(type, updateFn, id);
@@ -97,7 +108,7 @@ export function useSubscribableState<S extends IState>(type: Type, id?: Id) {
  *
  * @param type
  */
-export function useStoreActions<A extends IActions>(type: Type) {
+export function useStoreActions<A extends IStoreActions>(type: Type) {
   const store = useContext(Context) as Store;
   const actions = store.getActions<A>(type);
   return actions;

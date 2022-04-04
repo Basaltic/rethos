@@ -1,45 +1,54 @@
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
-import { StoreQuery } from './store-query';
+import { IStoreQuery, StoreQuery } from './store-query';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { ExtractActions, IActions } from './types';
+import type { DropFirst } from './types';
 
+export interface IStoreActions {
+  [key: string]: (query: IStoreQuery, ...args: any) => void;
+}
+
+export type ExtractActions<A extends IStoreActions> = {
+  [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
+};
 /**
- * Actions in Store
+ * Proxy the action functions
+ *
+ * @param action actions defined by the user
+ * @param state the state passed to the action
+ * @returns a proxy action object
  */
-export class StoreActions {
-  /**
-   * Proxy the action functions
-   *
-   * @param action actions defined by the user
-   * @param state the state passed to the action
-   * @returns a proxy action object
-   */
-  static createProxyAction<A extends IActions>(action: A, query: StoreQuery, tracker: StoreStateUpdateTracker) {
-    return new Proxy(action, {
-      get: (target: A, prop: string) => {
-        const rawAction = target[prop];
-        return (...args: any) => {
-          try {
-            const doAction = () => rawAction(query, ...args);
+export function createProxyAction<A extends IStoreActions>(
+  actions: A,
+  query: StoreQuery,
+  tracker: StoreStateUpdateTracker,
+  actionExecutionStack: any[],
+) {
+  const proxyActions = new Proxy(actions, {
+    get: (target: A, prop: string) => {
+      const rawAction = target[prop];
+      return (...args: any) => {
+        try {
+          const doAction = () => rawAction(query, ...args);
 
-            // this.actionExecutionStack.push(doAction);
-            doAction();
-            // this.actionExecutionStack.pop();
+          actionExecutionStack.push(doAction);
+          doAction();
+          actionExecutionStack.pop();
 
-            // const isExecuting = this.actionExecutionStack.length > 0;
-            // if (!isExecuting) {
+          const isExecuting = actionExecutionStack.length > 0;
+          if (!isExecuting) {
             if (typeof reactBatchUpdate === 'function') {
               reactBatchUpdate(tracker.commitUpdate.bind(tracker));
             } else {
               tracker.commitUpdate();
             }
-            // }
-          } catch (e) {
-            console.error(e);
-            // this.actionExecutionStack = [];
           }
-        };
-      },
-    }) as unknown as ExtractActions<A>;
-  }
+        } catch (e) {
+          console.log(e);
+          actionExecutionStack = [];
+        }
+      };
+    },
+  }) as unknown as ExtractActions<A>;
+
+  return proxyActions;
 }

@@ -1,12 +1,20 @@
 import { isObject } from '../utils/is-object';
 import { errors } from './error';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { IState } from './types';
+
+export type Primitive = bigint | boolean | null | number | string | symbol | undefined;
+export type StateValue = Primitive | IStoreState | StateValueArray;
+
+export interface StateValueArray extends Array<StateValue> {}
+
+export interface IStoreState {
+  [key: string]: StateValue;
+}
 
 /**
  * Single Store to mange the state and action
  */
-export class StoreState<S extends IState> {
+export class StoreState<S extends IStoreState> {
   /**
    * The original(default) state object.
    * - This object mainly used as the "identifier"

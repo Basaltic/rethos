@@ -1,11 +1,11 @@
-import { StoreState } from './store-state';
+import { IStoreState, StoreState } from './store-state';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { Id, IState } from './types';
+import { Id } from './types';
 
 /**
  * Store State faimly is a set of state instances with same state structs.
  */
-export class StoreStateFamily<S extends IState> {
+export class StoreStateFamily<S extends IStoreState> {
   /**
    * Single Store Created In this family
    */
