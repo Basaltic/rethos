@@ -3,23 +3,7 @@ import { IStoreDescriptor } from './store-descriptor';
 import { IStoreState } from './store-state';
 import { StoreStateContainer } from './store-state-container';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { StoreType, TUpdateFn, Identifier } from './types';
-
-export interface IStore {
-  /**
-   * Add state to the store
-   *
-   * @param type
-   * @param state
-   */
-  addState<S extends IStoreState>(type: StoreType, state: S): IStore;
-  /**
-   * Add actions to the store
-   * @param type
-   * @param actions
-   */
-  addActions<A extends IStoreActions>(type: StoreType, actions: A): IStore;
-}
+import { TUpdateFn, Identifier } from './types';
 
 export class Store {
   private descriptor: IStoreDescriptor;
@@ -46,6 +30,15 @@ export class Store {
     this.stateContainer = stateContainer;
   }
 
+  get(id?: Identifier, updateFn?: TUpdateFn): IStoreInstance {
+    return {
+      actions: this.getActions(id),
+      readonlyState: this.getReadonlyState(id),
+      changeableState: this.getChangeableState(id),
+      subscribableState: this.getSubscribableState(updateFn, id),
+    };
+  }
+
   getReadonlyState(id?: Identifier) {
     return this.stateContainer.getReadonlyState(id);
   }
@@ -54,7 +47,7 @@ export class Store {
     return this.stateContainer.getChangeableState(id);
   }
 
-  getSubscribableState(updateFn: TUpdateFn, id?: Identifier) {
+  getSubscribableState(updateFn: TUpdateFn = () => {}, id?: Identifier) {
     return this.stateContainer.getSubscribableState(updateFn, id);
   }
 
@@ -63,4 +56,11 @@ export class Store {
     const proxyActions = createProxyAction(this.descriptor.actions, state, this.updateTracker, this.executionStack);
     return proxyActions;
   }
+}
+
+export interface IStoreInstance {
+  actions: IStoreActions;
+  readonlyState: IStoreState;
+  changeableState: IStoreState;
+  subscribableState: IStoreState;
 }

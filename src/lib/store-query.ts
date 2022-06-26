@@ -16,7 +16,7 @@ export class StoreQuery implements IStoreQuery {
   constructor(private stateContainer: StoreStateContainer, private actionsContainer: StoreActionsContainer) {}
 
   getState<S extends IStoreState>(type: StoreType, id?: Identifier): S {
-    return this.stateContainer.getChangeableState(type, id);
+    return {} as S;
   }
 
   getActions<A extends IStoreActions>(type: StoreType): ExtractActions<A> {
