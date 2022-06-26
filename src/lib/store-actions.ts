@@ -1,10 +1,10 @@
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
-import { IStoreQuery, StoreQuery } from './store-query';
+import { IStoreState } from './store-state';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import type { DropFirst } from './types';
 
 export interface IStoreActions {
-  [key: string]: (query: IStoreQuery, ...args: any) => void;
+  [key: string]: (state: IStoreState, ...args: any) => void;
 }
 
 export type ExtractActions<A extends IStoreActions> = {
@@ -19,7 +19,7 @@ export type ExtractActions<A extends IStoreActions> = {
  */
 export function createProxyAction<A extends IStoreActions>(
   actions: A,
-  query: StoreQuery,
+  state: IStoreState,
   tracker: StoreStateUpdateTracker,
   actionExecutionStack: any[],
 ) {
@@ -28,7 +28,7 @@ export function createProxyAction<A extends IStoreActions>(
       const rawAction = target[prop];
       return (...args: any) => {
         try {
-          const doAction = () => rawAction(query, ...args);
+          const doAction = () => rawAction(state, ...args);
 
           actionExecutionStack.push(doAction);
           doAction();

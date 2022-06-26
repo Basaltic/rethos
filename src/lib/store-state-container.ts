@@ -1,13 +1,18 @@
 import type { IStoreState } from './store-state';
 import { StoreStateFamily } from './store-state-family';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { Id, TUpdateFn, Type } from './types';
+import { Identifier, TUpdateFn } from './types';
 
-export class StoreStateContainer {
-  private stateFaimlyCollection = new Map();
+export class StoreStateContainer<S extends IStoreState = IStoreState> {
 
-  constructor(private tracker: StoreStateUpdateTracker) {}
+  private stateFamily: StoreStateFamily<S>;
 
+  constructor(state: S, private tracker: StoreStateUpdateTracker) {
+    const stateFamily = new StoreStateFamily(state, this.tracker);
+    this.stateFamily = stateFamily;
+  }
+
+  
   /**
    * Get Changeable State From Container
    *
@@ -15,9 +20,20 @@ export class StoreStateContainer {
    * @param id
    * @returns
    */
-  getChangeableState<S extends IStoreState>(type: Type, id?: Id): S {
-    const stateFamily = this.stateFaimlyCollection.get(type) as StoreStateFamily<S>;
-    const stateInstance = stateFamily.getStoreState(id);
+  getReadonlyState(id?: Identifier): S {
+    const stateInstance = this.stateFamily.getStoreState(id);
+    const changleableState = stateInstance.getChangableState();
+    return changleableState;
+  }
+  /**
+   * Get Changeable State From Container
+   *
+   * @param type
+   * @param id
+   * @returns
+   */
+  getChangeableState(id?: Identifier): S {
+    const stateInstance = this.stateFamily.getStoreState(id);
     const changleableState = stateInstance.getChangableState();
     return changleableState;
   }
@@ -25,20 +41,10 @@ export class StoreStateContainer {
   /**
    * Get Subscribable State From Container
    */
-  getSubscribableState<S extends IStoreState>(type: Type, updateFn: TUpdateFn, id?: Id): S {
-    const stateFamily = this.stateFaimlyCollection.get(type) as StoreStateFamily<S>;
-    const stateInstance = stateFamily.getStoreState(id);
-    return stateInstance.getSubscribableState(updateFn);
+  getSubscribableState(updateFn: TUpdateFn, id?: Identifier): S {
+    const stateInstance = this.stateFamily.getStoreState(id);
+    const subscribableState = stateInstance.getSubscribableState(updateFn);
+    return subscribableState;
   }
 
-  /**
-   * Add State to the container
-   *
-   * @param type
-   * @param state
-   */
-  addState<S extends IStoreState>(type: Type, state: S) {
-    const storeStateFamily = new StoreStateFamily(state, this.tracker);
-    this.stateFaimlyCollection.set(type, storeStateFamily);
-  }
 }

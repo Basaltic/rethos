@@ -1,10 +1,9 @@
 import { createProxyAction, IStoreActions } from './store-actions';
-import { StoreActionsContainer } from './store-actions-container';
-import { StoreQuery } from './store-query';
+import { IStoreDescriptor } from './store-descriptor';
 import { IStoreState } from './store-state';
 import { StoreStateContainer } from './store-state-container';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { Type, TUpdateFn, Id } from './types';
+import { StoreType, TUpdateFn, Identifier } from './types';
 
 export interface IStore {
   /**
@@ -13,73 +12,55 @@ export interface IStore {
    * @param type
    * @param state
    */
-  addState<S extends IStoreState>(type: Type, state: S): IStore;
+  addState<S extends IStoreState>(type: StoreType, state: S): IStore;
   /**
    * Add actions to the store
    * @param type
    * @param actions
    */
-  addActions<A extends IStoreActions>(type: Type, actions: A): IStore;
+  addActions<A extends IStoreActions>(type: StoreType, actions: A): IStore;
 }
 
 export class Store {
-  private stateContainer: StoreStateContainer;
+  private descriptor: IStoreDescriptor;
 
-  private actionsContainer: StoreActionsContainer;
+  private stateContainer: StoreStateContainer;
 
   /**
    * Track the execution of the action
    */
-  private actionExecutionStack: Function[] = [];
+  private executionStack: Function[];
+  private updateTracker: StoreStateUpdateTracker;
 
-  private query: StoreQuery;
-  private tracker: StoreStateUpdateTracker;
+  constructor(
+    descriptor: IStoreDescriptor,
+    updateTracker: StoreStateUpdateTracker = new StoreStateUpdateTracker(),
+    executionStack: Function[] = [],
+  ) {
+    this.descriptor = descriptor;
 
-  constructor() {
-    const tracker = new StoreStateUpdateTracker();
-    const stateContainer = new StoreStateContainer(tracker);
-    const actionsContainer = new StoreActionsContainer();
+    const stateContainer = new StoreStateContainer(descriptor.state, updateTracker);
 
-    const query = new StoreQuery(stateContainer, actionsContainer);
-
+    this.updateTracker = updateTracker;
+    this.executionStack = executionStack;
     this.stateContainer = stateContainer;
-    this.actionsContainer = actionsContainer;
-    this.query = query;
-    this.tracker = tracker;
   }
 
-  addState<S extends IStoreState>(type: Type, state: S) {
-    this.stateContainer.addState(type, state);
-    return this;
+  getReadonlyState(id?: Identifier) {
+    return this.stateContainer.getReadonlyState(id);
   }
 
-  addActions<A extends IStoreActions>(type: Type, actions: A) {
-    const proxyActions = createProxyAction(actions, this.query, this.tracker, this.actionExecutionStack);
-    this.actionsContainer.addActions(type, proxyActions);
-    return this;
+  getChangeableState(id?: Identifier) {
+    return this.stateContainer.getChangeableState(id);
   }
 
-  getState<S extends IStoreState>(type: Type, updateFn: TUpdateFn, id?: Id) {
-    return this.stateContainer.getSubscribableState<S>(type, updateFn, id);
+  getSubscribableState(updateFn: TUpdateFn, id?: Identifier) {
+    return this.stateContainer.getSubscribableState(updateFn, id);
   }
 
-  getActions<A extends IStoreActions>(type: Type) {
-    return this.actionsContainer.getActions<A>(type);
+  getActions(id?: Identifier) {
+    const state = this.stateContainer.getChangeableState(id);
+    const proxyActions = createProxyAction(this.descriptor.actions, state, this.updateTracker, this.executionStack);
+    return proxyActions;
   }
 }
-
-/**
- * Create Store Instance
- */
-export const createStore = () => {
-  const store: IStore = new Store();
-  return store;
-};
-
-/**
- * Create Unique Type For State or Actions
- *
- * @param name give type a name will make debug easier
- * @returns
- */
-export const createType: (name?: string) => Type = (name?: string) => (name ? Symbol.for(name) : Symbol());

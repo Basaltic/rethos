@@ -1,6 +1,6 @@
 import { IStoreState, StoreState } from './store-state';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { Id } from './types';
+import { Identifier } from './types';
 
 /**
  * Store State faimly is a set of state instances with same state structs.
@@ -9,7 +9,7 @@ export class StoreStateFamily<S extends IStoreState> {
   /**
    * Single Store Created In this family
    */
-  private singleStoreCollection = new Map<Id, StoreState<S>>();
+  private singleStoreCollection = new Map<Identifier, StoreState<S>>();
 
   /**
    * Default Single Store in this family if no "Id" passed
@@ -21,10 +21,10 @@ export class StoreStateFamily<S extends IStoreState> {
   /**
    * Lazy init & get store by id
    *
-   * @param {Id} [id]
+   * @param {Identifier} [id]
    * @returns
    */
-  getStoreState = (id?: Id) => {
+  getStoreState = (id?: Identifier) => {
     if (id) {
       let store = this.singleStoreCollection.get(id);
       if (!store) {
@@ -44,7 +44,7 @@ export class StoreStateFamily<S extends IStoreState> {
     return this.defaultSingleStore;
   };
 
-  remoteStoreState = (id: Id) => {
+  remoteStoreState = (id: Identifier) => {
     this.singleStoreCollection.delete(id);
   };
 }

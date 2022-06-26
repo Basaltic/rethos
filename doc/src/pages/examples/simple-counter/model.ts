@@ -12,7 +12,7 @@ export interface ICounterActions extends IStoreActions {
   inc: (q: IStoreQuery, id?: string) => void;
   dec: (q: IStoreQuery, id?: string) => void;
 }
-export const counterActions: ICounterActions = {
+export const counterActions = {
   inc: (q: IStoreQuery, id?: string) => {
     const countState = q.getState<ICounterState>(ICounterState, id);
     countState.count += 1;
@@ -25,3 +25,10 @@ export const counterActions: ICounterActions = {
 
 store.addState(ICounterState, defaultCounterState);
 store.addActions(ICounterActions, counterActions);
+
+function createStore<S, A>(s: S, a: A) {
+  return {
+    s,
+    a,
+  };
+}
