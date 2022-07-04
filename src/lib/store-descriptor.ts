@@ -1,6 +1,6 @@
-import { IStoreActions } from "./store-actions";
-import { IStoreState } from "./store-state";
-import { StoreType } from "./types";
+import { IStoreActions } from './store-actions';
+import { IStoreState } from './store-state';
+import { StoreType } from './types';
 
 /**
  * Describe the Store Structure
@@ -12,23 +12,18 @@ export interface IStoreDescriptor {
   actions: IStoreActions;
 }
 
-
 /**
  * Create Store Instance
  */
-export const createStoreDescriptor = <S extends IStoreState, A extends IStoreActions>(props: {
-  name: string;
-  state: S,
-  actions: A
-}) => {
+export const createStoreDescriptor = <S extends IStoreState, A extends IStoreActions>(props: { name: string; state: S; actions: A }) => {
   const { name, state, actions } = props;
   const type = createType(name);
   return {
-    name, 
+    name,
     type,
-    state: state,
-    actions
-  }
+    state,
+    actions,
+  };
 };
 
 /**
@@ -38,4 +33,3 @@ export const createStoreDescriptor = <S extends IStoreState, A extends IStoreAct
  * @returns
  */
 export const createType: (name?: string) => StoreType = (name?: string) => (name ? Symbol.for(name) : Symbol());
-
