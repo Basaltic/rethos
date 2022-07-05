@@ -1,9 +1,7 @@
 import { Store } from './store';
-import { ExtractActions, IStoreActions } from './store-actions';
 import { StoreCollection } from './store-collection';
 import { IStoreDescriptor } from './store-descriptor';
 import { IStoreRegistry, StoreRegistry } from './store-registry';
-import { IStoreState } from './store-state';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import { Identifier, StoreType } from './types';
 
@@ -24,22 +22,6 @@ export interface IStoreContainer {
   get(type: StoreType): Store | undefined;
 
   /**
-   * Get State
-   *
-   * @param type
-   * @param id
-   */
-  getState<S extends IStoreState>(type: StoreType, id: Identifier): S;
-
-  /**
-   * Get Actions
-   *
-   * @param type
-   * @param id
-   */
-  getActions<A extends IStoreActions>(type: StoreType, id: Identifier): ExtractActions<A>;
-
-  /**
    * Dispose
    *
    * @param type
@@ -53,7 +35,7 @@ export class StoreContainer implements IStoreContainer {
   private collection: StoreCollection;
 
   /**
-   *
+   * Track the state update
    */
   private updateTracker: StoreStateUpdateTracker;
   /**
@@ -69,7 +51,7 @@ export class StoreContainer implements IStoreContainer {
     this.executionStack = [];
   }
 
-  add(discriptor: IStoreDescriptor): void {
+  add(discriptor: IStoreDescriptor | any): void {
     this.registry.register(discriptor);
 
     const store = new Store(discriptor, this.updateTracker, this.executionStack);
@@ -80,13 +62,8 @@ export class StoreContainer implements IStoreContainer {
     return this.collection.get(type);
   }
 
-  getState<S extends IStoreState>(type: any, id: Identifier): S {
-    throw new Error('Method not implemented.');
-  }
-  getActions<A extends IStoreActions>(type: any, id: Identifier): ExtractActions<A> {
-    throw new Error('Method not implemented.');
-  }
   dispose(type: any, id: Identifier): void {
-    throw new Error('Method not implemented.');
+    const store = this.get(type);
+    store?.dispose(id);
   }
 }

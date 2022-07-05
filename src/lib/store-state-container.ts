@@ -4,7 +4,6 @@ import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import { Identifier, TUpdateFn } from './types';
 
 export class StoreStateContainer<S extends IStoreState = IStoreState> {
-
   private stateFamily: StoreStateFamily<S>;
 
   constructor(state: S, private tracker: StoreStateUpdateTracker) {
@@ -12,7 +11,6 @@ export class StoreStateContainer<S extends IStoreState = IStoreState> {
     this.stateFamily = stateFamily;
   }
 
-  
   /**
    * Get Changeable State From Container
    *
@@ -47,4 +45,10 @@ export class StoreStateContainer<S extends IStoreState = IStoreState> {
     return subscribableState;
   }
 
+  /**
+   * Dispose the store state instance of specific id
+   */
+  dispose(id: Identifier) {
+    this.stateFamily.remoteStoreState(id);
+  }
 }

@@ -5,11 +5,11 @@ import ReactDOM from 'react-dom';
 import App from './app/app';
 import { HashRouter } from 'react-router-dom';
 import { Provider } from '../../src/main';
-import { store } from './store';
+import { storeContainer } from './store';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Provider value={store}>
+    <Provider value={storeContainer}>
       <HashRouter>
         <App />
       </HashRouter>

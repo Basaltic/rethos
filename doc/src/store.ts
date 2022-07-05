@@ -1,3 +1,3 @@
-import { createStore } from '../../src/main';
+import { StoreContainer } from '../../src/main';
 
-export const store = createStore();
+export const storeContainer = new StoreContainer();

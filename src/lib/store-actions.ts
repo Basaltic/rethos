@@ -3,8 +3,8 @@ import { IStoreState } from './store-state';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import type { DropFirst } from './types';
 
-export interface IStoreActions {
-  [key: string]: (state: IStoreState, ...args: any) => void;
+export interface IStoreActions<S extends IStoreState = IStoreState> {
+  [key: string]: (state: S, ...args: any) => void;
 }
 
 export type ExtractActions<A extends IStoreActions> = {

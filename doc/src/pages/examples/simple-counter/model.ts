@@ -1,34 +1,23 @@
-import { createType, IStoreActions, IStoreState, IStoreQuery } from '../../../../../src/main';
-import { store } from '../../../store';
+import { createStoreDescriptor } from '../../../../../src/main';
+import { storeContainer } from '../../../store';
 
-export const ICounterState = createType('ICounterState');
-export interface ICounterState extends IStoreState {
-  count: number;
-}
-export const defaultCounterState: ICounterState = { count: 0 };
-
-export const ICounterActions = createType();
-export interface ICounterActions extends IStoreActions {
-  inc: (q: IStoreQuery, id?: string) => void;
-  dec: (q: IStoreQuery, id?: string) => void;
-}
-export const counterActions = {
-  inc: (q: IStoreQuery, id?: string) => {
-    const countState = q.getState<ICounterState>(ICounterState, id);
-    countState.count += 1;
+const simpleCounterStoreDescriptor = createStoreDescriptor({
+  name: 'simple_counter',
+  state: {
+    count: 0,
   },
-  dec: (q: IStoreQuery, id?: string) => {
-    const countState = q.getState<ICounterState>(ICounterState, id);
-    countState.count -= 1;
+  actions: {
+    inc: (state) => {
+      state.count++;
+    },
+    dec: (state) => {
+      state.count--;
+    },
   },
-};
+});
 
-store.addState(ICounterState, defaultCounterState);
-store.addActions(ICounterActions, counterActions);
+storeContainer.add(simpleCounterStoreDescriptor);
 
-function createStore<S, A>(s: S, a: A) {
-  return {
-    s,
-    a,
-  };
-}
+export const ISimpleCounterStore = simpleCounterStoreDescriptor.type;
+export type ISimpleCounterStoreState = typeof simpleCounterStoreDescriptor['state'];
+export type ISimpleCounterStoreActions = typeof simpleCounterStoreDescriptor['actions'];

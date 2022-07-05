@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { useForceUpdate } from '../hooks/use-force-update';
 import { Store } from './store';
+import { ExtractActions, IStoreActions } from './store-actions';
 import { IStoreContainer } from './store-container';
 import { IStoreState } from './store-state';
 import { StoreType, Identifier } from './types';
@@ -33,8 +34,8 @@ export function useSubscribableState<S extends IStoreState>(type: StoreType, id?
  *
  * @param type
  */
-export function useStoreActions(type: StoreType, id?: Identifier) {
+export function useStoreActions<A extends IStoreActions<any>>(type: StoreType, id?: Identifier) {
   const store = useStore(type);
   const actions = store.getActions(id);
-  return actions;
+  return actions as ExtractActions<A>;
 }

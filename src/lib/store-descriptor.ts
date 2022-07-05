@@ -15,7 +15,7 @@ export interface IStoreDescriptor {
 /**
  * Create Store Instance
  */
-export const createStoreDescriptor = <S extends IStoreState, A extends IStoreActions>(props: { name: string; state: S; actions: A }) => {
+export const createStoreDescriptor = <S extends IStoreState, A extends IStoreActions<S>>(props: { name: string; state: S; actions: A }) => {
   const { name, state, actions } = props;
   const type = createType(name);
   return {

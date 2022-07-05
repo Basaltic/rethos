@@ -56,6 +56,10 @@ export class Store {
     const proxyActions = createProxyAction(this.descriptor.actions, state, this.updateTracker, this.executionStack);
     return proxyActions;
   }
+
+  dispose(id: Identifier) {
+    this.stateContainer.dispose(id);
+  }
 }
 
 export interface IStoreInstance {
