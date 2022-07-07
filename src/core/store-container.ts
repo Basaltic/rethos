@@ -5,35 +5,15 @@ import { IStoreRegistry, StoreRegistry } from './store-registry';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import { Identifier, StoreType } from './types';
 
-export interface IStoreContainer {
+export class StoreContainer {
   /**
-   * Add New Store Descriptor
-   *
-   * @param discriptor
+   * Keep the descriptor of stores
    */
-  add(discriptor: IStoreDescriptor): void;
-
-  /**
-   * Get Store Instance
-   *
-   * @param type
-   * @param id
-   */
-  get(type: StoreType): Store | undefined;
-
-  /**
-   * Dispose
-   *
-   * @param type
-   * @param id
-   */
-  dispose(type: StoreType, id: Identifier): void;
-}
-
-export class StoreContainer implements IStoreContainer {
   private registry: IStoreRegistry;
+  /**
+   * Keep the instances of store
+   */
   private collection: StoreCollection;
-
   /**
    * Track the state update
    */
@@ -51,19 +31,44 @@ export class StoreContainer implements IStoreContainer {
     this.executionStack = [];
   }
 
+  /**
+   * Add New Store Descriptor
+   *
+   * @param discriptor
+   */
   add(discriptor: IStoreDescriptor | any): void {
     this.registry.register(discriptor);
-
-    const store = new Store(discriptor, this.updateTracker, this.executionStack);
-    this.collection.set(discriptor.type, store);
   }
 
-  get(type: any): Store | undefined {
-    return this.collection.get(type);
+  /**
+   * Get Store Instance
+   *
+   * @param type
+   * @param id
+   */
+  get(type: StoreType, id?: Identifier): Store {
+    const instance = this.collection.get(type, id);
+    if (instance) {
+      return instance;
+    } else {
+      const descriptor = this.registry.getDescriptor(type);
+      if (descriptor) {
+        const storeInstance = new Store(descriptor, this.updateTracker, this.executionStack, id);
+        this.collection.set(type, storeInstance, id);
+        return storeInstance;
+      } else {
+        throw new Error('no such type of store');
+      }
+    }
   }
 
+  /**
+   * Dispose
+   *
+   * @param type
+   * @param id
+   */
   dispose(type: any, id: Identifier): void {
-    const store = this.get(type);
-    store?.dispose(id);
+    this.collection.remove(type, id);
   }
 }

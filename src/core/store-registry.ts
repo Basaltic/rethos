@@ -1,4 +1,3 @@
-import { Store } from './store';
 import { IStoreDescriptor } from './store-descriptor';
 import { StoreType } from './types';
 
@@ -11,9 +10,6 @@ export interface IStoreRegistry {
 export class StoreRegistry implements IStoreRegistry {
   private descriptors: IStoreDescriptor[] = [];
   private descriptorMap = new Map<StoreType, IStoreDescriptor>();
-
-  private stores: Store[] = [];
-  private storeMap = new Map<StoreType, Store>();
 
   register(storeDescriptor: IStoreDescriptor): void {
     const existedDescriptor = this.descriptorMap.get(storeDescriptor.type);

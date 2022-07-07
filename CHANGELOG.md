@@ -1,3 +1,12 @@
+# 0.8.0
+
+* 重新设计架构，不再有family的概念，只有 Store 实例
+
+---
+
+* redesign the architecture， no family, just store instance
+
+
 # 0.7.0
 
 * 重新设计api，单体store，状态和行为分离

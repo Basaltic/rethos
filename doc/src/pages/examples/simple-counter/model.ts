@@ -19,5 +19,6 @@ const simpleCounterStoreDescriptor = createStoreDescriptor({
 storeContainer.add(simpleCounterStoreDescriptor);
 
 export const ISimpleCounterStore = simpleCounterStoreDescriptor.type;
-export type ISimpleCounterStoreState = typeof simpleCounterStoreDescriptor['state'];
-export type ISimpleCounterStoreActions = typeof simpleCounterStoreDescriptor['actions'];
+export type ISimpleCounterStore = typeof simpleCounterStoreDescriptor;
+export type ISimpleCounterStoreState = ISimpleCounterStore['state'];
+export type ISimpleCounterStoreActions = ISimpleCounterStore['actions'];

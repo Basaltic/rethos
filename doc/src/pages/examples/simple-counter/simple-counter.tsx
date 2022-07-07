@@ -1,10 +1,10 @@
 import React from 'react';
-import { useStoreActions, useSubscribableState } from '../../../../../src/main';
+import { useStoreActions, useStoreState } from '../../../../../src/main';
 import { Page } from '../../../containers/page';
 import { ISimpleCounterStoreState, ISimpleCounterStoreActions, ISimpleCounterStore } from './model';
 
 export const SimpleCounterPage = () => {
-  const state = useSubscribableState<ISimpleCounterStoreState>(ISimpleCounterStore);
+  const state = useStoreState<ISimpleCounterStoreState>(ISimpleCounterStore);
   const actions = useStoreActions<ISimpleCounterStoreActions>(ISimpleCounterStore);
 
 

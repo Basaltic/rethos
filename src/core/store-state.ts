@@ -1,5 +1,5 @@
 import { isObject } from '../utils/is-object';
-import { errors } from './error';
+import { errors, throwError } from './error';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 
 export type Primitive = bigint | boolean | null | number | string | symbol | undefined;
@@ -59,16 +59,23 @@ export class StoreState<S extends IStoreState> {
    * @returns
    */
   getSubscribableState(updateFunc?: () => void) {
-    const proxyState = this.getProxyState(this.originalState, updateFunc);
+    const proxyState = this.getInnerSubscribableState(this.originalState, updateFunc);
     return proxyState;
   }
 
   /**
    * Get State that can be changed in action
    */
-  getChangableState() {
-    const proxyState = this.createProxyStateInAction(this.originalState);
+  getChangeableState() {
+    const proxyState = this.createChangeableState(this.originalState);
     return proxyState;
+  }
+
+  /**
+   * Get State that is readonly, throw error if it is changed
+   */
+  getReadonlyState() {
+    return this.createReadonlyState(this.originalState);
   }
 
   /**
@@ -92,7 +99,7 @@ export class StoreState<S extends IStoreState> {
    * @param updateFunc
    * @returns
    */
-  private getProxyState(state: S, updateFunc?: () => void) {
+  private getInnerSubscribableState(state: S, updateFunc?: () => void) {
     let rawToProxyMap = this.rawToProxyMap.get(updateFunc);
     if (!rawToProxyMap) {
       rawToProxyMap = new WeakMap();
@@ -101,7 +108,7 @@ export class StoreState<S extends IStoreState> {
 
     let proxyState = rawToProxyMap.get(state);
     if (!proxyState) {
-      proxyState = this.createProxyState(state, updateFunc);
+      proxyState = this.createSubscribableState(state, updateFunc);
       rawToProxyMap.set(state, proxyState);
     }
     return proxyState;
@@ -112,7 +119,7 @@ export class StoreState<S extends IStoreState> {
    *  - auto make state observable
    *  - auto collect state update in  action
    */
-  private createProxyState(state: S, updateFunc?: () => void): S {
+  private createSubscribableState(state: S, updateFunc?: () => void): S {
     return new Proxy(state, {
       get: (target: S, propKey: string, receiver) => {
         const isArray = Array.isArray(target);
@@ -127,7 +134,7 @@ export class StoreState<S extends IStoreState> {
 
         const originalValue = Reflect.get(target, propKey, receiver);
         if (isObject(originalValue)) {
-          return this.createProxyState(originalValue, updateFunc) as any;
+          return this.createSubscribableState(originalValue, updateFunc) as any;
         }
 
         return originalValue;
@@ -150,7 +157,7 @@ export class StoreState<S extends IStoreState> {
    * @param state
    * @returns
    */
-  private createProxyStateInAction(state: S): S {
+  private createChangeableState(state: S): S {
     return new Proxy(state, {
       get: (target: S, propKey: string, receiver) => {
         const value = Reflect.get(target, propKey, receiver);
@@ -162,7 +169,7 @@ export class StoreState<S extends IStoreState> {
         }
 
         if (isObject(value)) {
-          return this.createProxyStateInAction(value) as any;
+          return this.createChangeableState(value) as any;
         }
 
         return value;
@@ -185,6 +192,34 @@ export class StoreState<S extends IStoreState> {
         this.tracker.collectUpdate(target, propKey);
 
         return result;
+      },
+    });
+  }
+
+  private createReadonlyState(state: S): S {
+    return new Proxy(state, {
+      get: (target: S, propKey: string, receiver) => {
+        const value = Reflect.get(target, propKey, receiver);
+
+        const isArray = Array.isArray(target);
+
+        if (isArray) {
+          return target[propKey];
+        }
+
+        if (isObject(value)) {
+          return this.createReadonlyState(value) as any;
+        }
+
+        return value;
+      },
+      set: () => {
+        throwError(1);
+        return true;
+      },
+      deleteProperty: () => {
+        throwError(1);
+        return true;
       },
     });
   }

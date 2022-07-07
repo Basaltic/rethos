@@ -7,44 +7,104 @@
 
 小巧、简洁、强大的React状态管理库。
 
-* **简洁**：只有一个api，不存在过多的样板代码
-* **自动订阅**：用到哪个状态就自动订阅该状态并变更，不需要写任何的 select 函数来手动指定
-* **Flux架构**：遵循简化的flux架构，使得状态更可控和管理
+* **自动订阅**：自动订阅该状态并变更，不需要写任何的 select 函数来手动指定
+* **Flux架构**：遵循flux架构，使得状态更可控和管理
 
 **⚠️：处于开发中，1.0之前api不稳定**
 
 # 安装
 
 ```bash
-npm install rethos # or yarn add rethos or pnpm add rethos
+npm install rethos 
+# 或者 
+yarn add rethos 
+# 或者
+pnpm add rethos
 ```
 
 # 如何使用？
 
-## 1. 定义数据存储
+### 创建容器
 
-定义 & 创建数据存储，并分别传入默认的状态和action 方法，返回一个实例对象
+```typescript
+import { StoreContainer } from 'rethos'
 
-```ts
+export const storeContainer = new StoreContainer();
 
 ```
-## 2. 绑定组件
 
-在组件中使用需要绑定的store的hook函数，rethos会自动绑定，并在值发生变化是自动触发组件的更新
+### 注入React上下文
 
 ```tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { storeContainer } from './store-config'
 
 
+const root = ReactDOM.createRoot(document.getElementById('root'))
+
+root.render(
+  <Provider value={storeContainer}>
+    <App />
+  </Provider>
+)
 ```
 
+### 创建 Store
 
-# 接口详情
-## 创建Store接口
 ```ts
+// counter-store.ts
+
+import { createStoreDescriptor } from 'rethos'
+import { storeContainer } from './store-config'
+
+// 定义（描述）Store
+const counterStoreDescriptor = createStoreDescriptor({
+  name: 'counter',
+  state: {
+    count: 0,
+  },
+  actions: {
+    inc: (state) => {
+      state.count++;
+    },
+    dec: (state) => {
+      state.count--;
+    },
+  },
+});
 
 
+export const CounterStoreType = simpleCounterStoreDescriptor.type;
+
+// 这些类型是为了后续使用中更好的类型推断
+export type ICounterStoreState = ISimpleCounterStore['state'];
+export type ICounterStoreActions = ISimpleCounterStore['actions'];
+
+// 注册到容器中
+storeContainer.add(counterStoreDescriptor);
 
 ```
+
+### 在组件中订阅状态、更改状态
+```tsx
+import React from 'react'
+import { useStoreState, useStoreActions } from 'rethos'
+import { CounterStoreType } from './counter-store.ts'
+
+export const Counter = () => {
+  const { count } = useStoreState(CounterStoreType)
+  const counterActions = useStoreActions(CounterStoreType)
+
+  return <div>
+    <div>当前计数：{count}</div>
+    <button onClick={() => counterActions.inc()}>增加</button>
+    <button onClick={() => counterActions.dec()}>减少</button>
+  </div>
+}
+
+```
+
 
 # 浏览器兼容
 

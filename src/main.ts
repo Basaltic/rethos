@@ -1,5 +1,5 @@
-export type { IStoreState } from './lib/store-state';
-export type { IStoreActions } from './lib/store-actions';
-export { createStoreDescriptor } from './lib/store-descriptor';
-export { StoreContainer } from './lib/store-container';
-export { Provider, useSubscribableState, useStoreActions } from './lib/react';
+export type { IStoreState } from './core/store-state';
+export type { IStoreActions } from './core/store-actions';
+export { createStoreDescriptor } from './core/store-descriptor';
+export { StoreContainer } from './core/store-container';
+export { Provider, useStoreState, useStoreActions } from './hooks/react';
