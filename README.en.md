@@ -3,13 +3,13 @@
 # Rethos 
 
 [![NPM Version](https://img.shields.io/npm/v/rethos?style=flat&colorA=brightgreen&colorB=lightgrey)](https://www.npmjs.com/package/rethos)
-[![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/result?p=zustand)
+[![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/package/rethos)
+
 
 A small, simple but powerful proxy based state management libaray in react. 
 
 * **Minimal Api**, only one api to create store (or store family), no extra boilerplate
 * **Auto Subscribition**, no select function needed, make code clean
-* **Flux Architecture**, simpified flux architecture, state only can be changed in actions
 
 # Installation
 
