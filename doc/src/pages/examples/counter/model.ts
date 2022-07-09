@@ -2,7 +2,7 @@ import { createStoreDescriptor } from '../../../../../src/main';
 import { storeContainer } from '../../../store';
 
 const simpleCounterStoreDescriptor = createStoreDescriptor({
-  name: 'simple_counter',
+  name: 'counter',
   state: {
     count: 0,
   },

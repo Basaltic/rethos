@@ -1,13 +1,15 @@
 import { IStoreDescriptor } from './store-descriptor';
 import { StoreType } from './types';
 
-export interface IStoreRegistry {
+export interface IStoreDiscriptorRegistry {
   register(storeDescriptor: IStoreDescriptor): void;
-
   getDescriptor(type: StoreType): IStoreDescriptor | undefined;
 }
 
-export class StoreRegistry implements IStoreRegistry {
+/**
+ * Manage the store discriptor
+ */
+export class StoreDiscriptorRegistry implements IStoreDiscriptorRegistry {
   private descriptors: IStoreDescriptor[] = [];
   private descriptorMap = new Map<StoreType, IStoreDescriptor>();
 

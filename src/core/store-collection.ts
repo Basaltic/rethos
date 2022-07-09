@@ -1,6 +1,9 @@
 import { Store } from './store';
 import { Identifier, StoreType } from './types';
 
+/**
+ * Manage the store instance
+ */
 export class StoreCollection {
   private entries = new Map<StoreType, Map<Identifier, Store>>();
 

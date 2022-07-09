@@ -1,7 +1,7 @@
 import { Store } from './store';
 import { StoreCollection } from './store-collection';
 import { IStoreDescriptor } from './store-descriptor';
-import { IStoreRegistry, StoreRegistry } from './store-registry';
+import { IStoreDiscriptorRegistry, StoreDiscriptorRegistry } from './store-registry';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import { Identifier, StoreType } from './types';
 
@@ -9,7 +9,7 @@ export class StoreContainer {
   /**
    * Keep the descriptor of stores
    */
-  private registry: IStoreRegistry;
+  private registry: IStoreDiscriptorRegistry;
   /**
    * Keep the instances of store
    */
@@ -24,7 +24,7 @@ export class StoreContainer {
   private executionStack: Function[];
 
   constructor() {
-    this.registry = new StoreRegistry();
+    this.registry = new StoreDiscriptorRegistry();
     this.collection = new StoreCollection();
 
     this.updateTracker = new StoreStateUpdateTracker();
@@ -42,6 +42,7 @@ export class StoreContainer {
 
   /**
    * Get Store Instance
+   * Lazily initialize the store instance while it is got
    *
    * @param type
    * @param id

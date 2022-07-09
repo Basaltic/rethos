@@ -43,7 +43,6 @@ export function createProxyAction<A extends IStoreActions>(
             }
           }
         } catch (e) {
-          console.log(e);
           actionExecutionStack = [];
         }
       };
