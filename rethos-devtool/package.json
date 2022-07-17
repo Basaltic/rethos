@@ -1,0 +1,39 @@
+{
+  "name": "rethos-devtool",
+  "displayName": "Rethos",
+  "version": "0.0.5",
+  "description": "rethos devtools",
+  "author": "lei",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build"
+  },
+  "dependencies": {
+    "plasmo": "0.48.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@plasmohq/prettier-plugin-sort-imports": "1.1.1",
+    "@types/chrome": "0.0.193",
+    "@types/node": "18.0.3",
+    "@types/react": "18.0.15",
+    "@types/react-dom": "18.0.6",
+    "prettier": "2.7.1",
+    "typescript": "4.7.4"
+  },
+  "manifest": {
+    "host_permissions": [
+      "https://*/*",
+      "http://*/*",
+      "file://*/*"
+    ],
+    "permissions": [
+      "notifications",
+      "contextMenus",
+      "storage",
+      "tabs",
+      "activeTab"
+    ]
+  }
+}

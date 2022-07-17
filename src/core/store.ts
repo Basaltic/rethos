@@ -17,6 +17,10 @@ export class Store<S extends IStoreState = IStoreState> {
    * Track the execution of the action
    */
   private executionStack: Function[];
+
+  /**
+   * Track the update in state
+   */
   private updateTracker: StoreStateUpdateTracker;
 
   constructor(
