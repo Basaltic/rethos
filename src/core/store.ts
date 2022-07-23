@@ -1,12 +1,21 @@
-import { createProxyAction } from './store-actions';
+import { createProxyAction, IStoreActions } from './store-actions';
 import { IStoreDescriptor } from './store-descriptor';
 import { IStoreState, StoreState } from './store-state';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
 import { TUpdateFn, Identifier } from './types';
 
+/**
+ * Manage the state and actions
+ */
 export class Store<S extends IStoreState = IStoreState> {
+  /**
+   * Identifier of the store
+   */
   public id?: Identifier;
-  private descriptor: IStoreDescriptor;
+  /**
+   * Descriptor of the store
+   */
+  private descriptor: IStoreDescriptor<S>;
 
   /**
    * Default Single Store in this family if no "Id" passed
@@ -24,7 +33,7 @@ export class Store<S extends IStoreState = IStoreState> {
   private updateTracker: StoreStateUpdateTracker;
 
   constructor(
-    descriptor: IStoreDescriptor,
+    descriptor: IStoreDescriptor<S>,
     updateTracker: StoreStateUpdateTracker = new StoreStateUpdateTracker(),
     executionStack: Function[] = [],
     id?: Identifier,
@@ -40,19 +49,26 @@ export class Store<S extends IStoreState = IStoreState> {
   }
 
   /**
-   * State is Readonly
+   * Get State of the store
+   *
+   * @param updateFn
+   * @returns
    */
-  get state() {
-    return this.singleState.getReadonlyState();
+  getState(updateFn?: TUpdateFn) {
+    if (updateFn) {
+      return this.singleState.getSubscribableState(updateFn);
+    } else {
+      return this.singleState.getReadonlyState();
+    }
   }
 
-  getSubscribableState(updateFn: TUpdateFn = () => {}): S {
-    return this.singleState.getSubscribableState(updateFn);
-  }
-
-  getActions() {
+  /**
+   * Get Actions of the store
+   * @returns
+   */
+  getActions(): IStoreActions<S> {
     const state = this.singleState.getChangeableState();
-    const proxyActions = createProxyAction(this.descriptor.actions, state, this.updateTracker, this.executionStack);
+    const proxyActions = createProxyAction(this.descriptor.actions as IStoreActions<any>, state, this.updateTracker, this.executionStack);
     return proxyActions;
   }
 }

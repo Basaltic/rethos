@@ -1,14 +1,26 @@
-import { createStoreDescriptor } from '../../../../../src/main';
+import { createStoreDescriptor, IStoreState } from '../../../../../src/main';
 import { storeContainer } from '../../../store';
 
-const simpleCounterStoreDescriptor = createStoreDescriptor({
+export interface ISimpleCounterState {
+  count: number;
+  test: string;
+}
+
+const defaultState: ISimpleCounterState = {
+  count: 10,
+  test: '',
+};
+
+export const simpleCounterStoreDescriptor = createStoreDescriptor({
   name: 'counter',
-  state: {
-    count: 0,
-  },
+  state: defaultState,
   actions: {
-    inc: (state) => {
-      state.count++;
+    inc: (state, incNum?: number) => {
+      if (incNum) {
+        state.count += incNum;
+      } else {
+        state.count++;
+      }
     },
     dec: (state) => {
       state.count--;
@@ -18,7 +30,7 @@ const simpleCounterStoreDescriptor = createStoreDescriptor({
 
 storeContainer.add(simpleCounterStoreDescriptor);
 
-export const ISimpleCounterStore = simpleCounterStoreDescriptor.type;
-export type ISimpleCounterStore = typeof simpleCounterStoreDescriptor;
-export type ISimpleCounterStoreState = ISimpleCounterStore['state'];
-export type ISimpleCounterStoreActions = ISimpleCounterStore['actions'];
+export const ISimpleCounterStoreType = simpleCounterStoreDescriptor.type;
+export type ISimpleCounterStoreDescriptor = typeof simpleCounterStoreDescriptor;
+export type ISimpleCounterStoreState = ISimpleCounterStoreDescriptor['state'];
+export type ISimpleCounterStoreActions = ISimpleCounterStoreDescriptor['actions'];

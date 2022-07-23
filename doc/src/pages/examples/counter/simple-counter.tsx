@@ -1,12 +1,11 @@
 import React from 'react';
 import { useStoreActions, useStoreState } from '../../../../../src/main';
 import { Page } from '../../../containers/page';
-import { ISimpleCounterStoreState, ISimpleCounterStoreActions, ISimpleCounterStore } from './model';
+import { simpleCounterStoreDescriptor } from './model';
 
 export const SimpleCounterPage = () => {
-  const state = useStoreState<ISimpleCounterStoreState>(ISimpleCounterStore);
-  const actions = useStoreActions<ISimpleCounterStoreActions>(ISimpleCounterStore);
-
+  const state = useStoreState(simpleCounterStoreDescriptor);
+  const actions = useStoreActions(simpleCounterStoreDescriptor);
 
   const { count } = state;
 

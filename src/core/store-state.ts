@@ -1,15 +1,11 @@
 import { isObject } from '../utils/is-object';
 import { errors, throwError } from './error';
 import { StoreStateUpdateTracker } from './store-state-update-tracker';
+import { JSONValue } from './types';
 
-export type Primitive = bigint | boolean | null | number | string | symbol | undefined;
-export type StateValue = Primitive | IStoreState | StateValueArray;
-
-export interface StateValueArray extends Array<StateValue> {}
-
-export interface IStoreState {
-  [key: string]: StateValue;
-}
+export type IStoreState<T extends object = object> = {
+  [k in keyof T]: JSONValue;
+};
 
 /**
  * Single Store to mange the state and action
@@ -121,13 +117,14 @@ export class StoreState<S extends IStoreState> {
    */
   private createSubscribableState(state: S, updateFunc?: () => void): S {
     return new Proxy(state, {
-      get: (target: S, propKey: string, receiver) => {
+      get: (target: S, propKey: any, receiver) => {
         const isArray = Array.isArray(target);
 
         if (updateFunc) {
           this.tracker.trackUpdate(target, propKey, updateFunc);
         }
 
+        // TODO: add
         if (isArray) {
           return target[propKey];
         }
@@ -159,7 +156,7 @@ export class StoreState<S extends IStoreState> {
    */
   private createChangeableState(state: S): S {
     return new Proxy(state, {
-      get: (target: S, propKey: string, receiver) => {
+      get: (target: S, propKey: any, receiver) => {
         const value = Reflect.get(target, propKey, receiver);
 
         const isArray = Array.isArray(target);
@@ -174,7 +171,7 @@ export class StoreState<S extends IStoreState> {
 
         return value;
       },
-      set: (target: S, propKey: string, value: any) => {
+      set: (target: S, propKey: any, value: any) => {
         const oldValue = Reflect.get(target, propKey);
 
         if (oldValue !== value) {
@@ -196,9 +193,15 @@ export class StoreState<S extends IStoreState> {
     });
   }
 
+  /**
+   * Create a readonly state
+   *
+   * @param state
+   * @returns
+   */
   private createReadonlyState(state: S): S {
     return new Proxy(state, {
-      get: (target: S, propKey: string, receiver) => {
+      get: (target: S, propKey: any, receiver) => {
         const value = Reflect.get(target, propKey, receiver);
 
         const isArray = Array.isArray(target);

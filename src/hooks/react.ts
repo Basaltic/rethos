@@ -1,14 +1,19 @@
 import { createContext, useContext } from 'react';
 import { useForceUpdate } from './use-force-update';
-import { ExtractActions, IStoreActions } from '../core/store-actions';
+import { ExtractActions } from '../core/store-actions';
 import { StoreContainer } from '../core/store-container';
-import { IStoreState } from '../core/store-state';
-import { StoreType, Identifier } from '../core/types';
+import { Identifier, TUpdateFn } from '../core/types';
+import { IStoreDescriptor } from '../core/store-descriptor';
 
 const Context = createContext<StoreContainer>(null as any);
 
 export const Provider = Context.Provider;
 
+/**
+ * Get Store Container from the context
+ *
+ * @returns {StoreContainer}
+ */
 export function useStoreContainer() {
   const storeContainer = useContext(Context) as StoreContainer;
   return storeContainer;
@@ -21,20 +26,24 @@ export function useStoreContainer() {
  * @param id
  * @returns
  */
-export function useStore(type: StoreType, id?: Identifier) {
+function useStoreInstance<SD extends IStoreDescriptor<any>>(descriptor: SD, id?: Identifier) {
   const storeContainer = useContext(Context) as StoreContainer;
+  const { type } = descriptor;
   const store = storeContainer.get(type, id);
-  return store;
+  return store as unknown as {
+    getState: (updateFn?: TUpdateFn) => typeof descriptor['state'];
+    getActions: () => ExtractActions<typeof descriptor['actions']>;
+  };
 }
 
 /**
  * Subscribe Store State
  */
-export function useStoreState<S extends IStoreState>(type: StoreType, id?: Identifier) {
-  const store = useStore(type, id);
+export function useStoreState<SD extends IStoreDescriptor<any>>(descriptor: SD, id?: Identifier) {
   const updateFn = useForceUpdate();
-  const state = store?.getSubscribableState(updateFn);
-  return state as S;
+  const store = useStoreInstance(descriptor, id);
+  const state = store?.getState(updateFn);
+  return state as typeof descriptor['state'];
 }
 
 /**
@@ -44,8 +53,8 @@ export function useStoreState<S extends IStoreState>(type: StoreType, id?: Ident
  * @param id
  * @returns
  */
-export function useStoreActions<A extends IStoreActions<any>>(type: StoreType, id?: Identifier) {
-  const store = useStore(type, id);
+export function useStoreActions<SD extends IStoreDescriptor<any>>(descriptor: SD, id?: Identifier) {
+  const store = useStoreInstance(descriptor, id);
   const actions = store.getActions();
-  return actions as ExtractActions<A>;
+  return actions as unknown as ExtractActions<typeof descriptor['actions']>;
 }

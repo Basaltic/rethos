@@ -5,19 +5,24 @@ import { StoreType } from './types';
 /**
  * Describe the Store Structure
  */
-export interface IStoreDescriptor {
+export interface IStoreDescriptor<S extends IStoreState = IStoreState> {
   name: string;
   type: StoreType;
-  state: IStoreState;
-  actions: IStoreActions;
+  state: S;
+  actions: IStoreActions<S>;
 }
 
 /**
  * Create Store Instance
  */
-export const createStoreDescriptor = <S extends IStoreState, A extends IStoreActions<S>>(props: { name: string; state: S; actions: A }) => {
+export const createStoreDescriptor = <S extends IStoreState<S>, A extends IStoreActions<S>>(props: {
+  name: string;
+  state: S;
+  actions: A;
+}) => {
   const { name, state, actions } = props;
   const type = createType(name);
+
   return {
     name,
     type,
