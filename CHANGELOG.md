@@ -1,3 +1,13 @@
+# 0.8.1
+
+* 简化了store的api
+* 修复一些问题
+
+--- 
+
+* simplify store apis
+* fix some bugs
+
 # 0.8.0
 
 * 重新设计架构，不再有family的概念，只有 Store 实例
