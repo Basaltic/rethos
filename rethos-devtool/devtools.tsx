@@ -1,15 +1,11 @@
 import panelIcon from "url:~/assets/icon512.png"
-import fontPickerHTML from "url:~/panels/rethos/index.html"
-
-// TODO: ADD plugin active check
-
-console.log(fontPickerHTML)
+import rethosPanelHTML from "url:~/panels/rethos/index.html"
 
 function createPanels() {
   chrome.devtools.panels.create(
     "Rethos",
     panelIcon,
-    fontPickerHTML,
+    rethosPanelHTML.split("/").pop(),
     function (panel) {
       console.log(panel)
     }
