@@ -1,26 +1,27 @@
-import { Store } from './store';
-import { StoreFamily } from './store-family';
-import { Identifier, StoreType } from './types';
+import { Entity } from './entity';
+import { EntityFamily } from './entity-family';
+import { Identifier, Type } from './types';
 
 /**
  * Manage the store instance
  */
 export class StoreCollection {
-  private entries = new Map<StoreType, StoreFamily>();
+  private entries = new Map<Type, EntityFamily>();
 
-  set(type: StoreType, store: Store, id?: Identifier) {
+  set(type: Type, store: Entity, id?: Identifier) {
     const instancesMap = this.entries.get(type);
     if (instancesMap) {
       instancesMap.set(id || type, store);
     } else {
-      const storeFamily = new StoreFamily();
+      const storeFamily = new EntityFamily();
       storeFamily.set(id || type, store);
       this.entries.set(type, storeFamily);
     }
   }
 
-  get(type: StoreType, id?: Identifier) {
+  get(type: Type, id?: Identifier) {
     const instancesMap = this.entries.get(type);
+
     if (id) {
       return instancesMap?.get(id);
     } else {
@@ -28,7 +29,7 @@ export class StoreCollection {
     }
   }
 
-  has(type: StoreType, id?: Identifier) {
+  has(type: Type, id?: Identifier) {
     const instancesMap = this.entries.get(type);
     if (id) {
       return instancesMap?.has(id);
@@ -37,7 +38,7 @@ export class StoreCollection {
     }
   }
 
-  remove(type: StoreType, id?: Identifier) {
+  remove(type: Type, id?: Identifier) {
     const instancesMap = this.entries.get(type);
     instancesMap?.remove(id || type);
   }

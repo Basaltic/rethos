@@ -1,13 +1,13 @@
-import { createProxyAction, IStoreActions } from './store-actions';
-import { IStoreDescriptor } from './store-descriptor';
-import { IStoreState, StoreState } from './store-state';
-import { StoreStateUpdateTracker } from './store-state-update-tracker';
+import { createProxyEntityProcessor, IEntityProcessors } from './processor';
+import { IEntityDescriptor } from './entity-descriptor';
+import { IRawState, ObservableState } from './observable-state';
+import { StoreStateUpdateTracker } from './state-update-tracker';
 import { TUpdateFn, Identifier } from './types';
 
 /**
  * Manage the state and actions
  */
-export class Store<S extends IStoreState = IStoreState> {
+export class Entity<S extends IRawState = IRawState> {
   /**
    * Identifier of the store
    */
@@ -15,12 +15,12 @@ export class Store<S extends IStoreState = IStoreState> {
   /**
    * Descriptor of the store
    */
-  private descriptor: IStoreDescriptor<S>;
+  private descriptor: IEntityDescriptor<S>;
 
   /**
    * Default Single Store in this family if no "Id" passed
    */
-  private singleState: StoreState<S>;
+  private singleState: ObservableState<S>;
 
   /**
    * Track the execution of the action
@@ -33,7 +33,7 @@ export class Store<S extends IStoreState = IStoreState> {
   private updateTracker: StoreStateUpdateTracker;
 
   constructor(
-    descriptor: IStoreDescriptor<S>,
+    descriptor: IEntityDescriptor<S>,
     updateTracker: StoreStateUpdateTracker = new StoreStateUpdateTracker(),
     executionStack: Function[] = [],
     id?: Identifier,
@@ -45,7 +45,21 @@ export class Store<S extends IStoreState = IStoreState> {
 
     // quickly clone the state
     const ss = JSON.parse(JSON.stringify(descriptor.state));
-    this.singleState = new StoreState<S>(ss, updateTracker);
+    this.singleState = new ObservableState<S>(ss, updateTracker);
+  }
+
+  /**
+   * Actions of the store
+   */
+  get actions() {
+    return this.getLocalProcessors();
+  }
+
+  /**
+   * Readonly state
+   */
+  get state() {
+    return this.getState();
   }
 
   /**
@@ -63,12 +77,18 @@ export class Store<S extends IStoreState = IStoreState> {
   }
 
   /**
-   * Get Actions of the store
-   * @returns
+   *
    */
-  getActions(): IStoreActions<S> {
+  getLocalProcessors(): IEntityProcessors<S> {
     const state = this.singleState.getChangeableState();
-    const proxyActions = createProxyAction(this.descriptor.actions as IStoreActions<any>, state, this.updateTracker, this.executionStack);
+    const proxyActions = createProxyEntityProcessor(
+      this.descriptor.actions as IEntityProcessors<any>,
+      state,
+      this.updateTracker,
+      this.executionStack,
+    );
     return proxyActions;
   }
 }
+
+export class ReadonlyEntity {}

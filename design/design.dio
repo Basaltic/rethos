@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
-    <diagram id="NG4mDt8sBnrd90Z5a9If" name="structure">
-        <mxGraphModel dx="879" dy="957" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <diagram id="NG4mDt8sBnrd90Z5a9If" name="design v1">
+        <mxGraphModel dx="1103" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -67,6 +67,14 @@
                 <mxCell id="34" value="Fetch to Initialize" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="465" y="470" width="110" height="20" as="geometry"/>
                 </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="Qhiy7LC2UAvs7l-Z-oj9" name="design v2">
+        <mxGraphModel dx="1103" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="g8Dly5Uk3rO8fFj6--9Y-0"/>
+                <mxCell id="g8Dly5Uk3rO8fFj6--9Y-1" parent="g8Dly5Uk3rO8fFj6--9Y-0"/>
             </root>
         </mxGraphModel>
     </diagram>

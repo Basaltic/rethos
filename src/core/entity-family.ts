@@ -1,13 +1,13 @@
-import { Store } from './store';
+import { Entity } from './entity';
 import { Identifier } from './types';
 
 /**
  * Manage store instance with same (state, actions) structure which identified by id
  */
-export class StoreFamily {
-  private collection = new Map<Identifier, Store>();
+export class EntityFamily {
+  private collection = new Map<Identifier, Entity>();
 
-  set(id: Identifier, storeInstance: Store) {
+  set(id: Identifier, storeInstance: Entity) {
     this.collection.set(id, storeInstance);
   }
 

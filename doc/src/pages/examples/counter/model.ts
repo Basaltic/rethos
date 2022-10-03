@@ -1,5 +1,7 @@
-import { createStoreDescriptor, IStoreState } from '../../../../../src/main';
+import { createStoreDescriptor } from '../../../../../src/main';
 import { storeContainer } from '../../../store';
+
+// - 这个类型定义，可以认为是定义了原型（也就是数据结构）
 
 export interface ISimpleCounterState {
   count: number;
@@ -10,6 +12,8 @@ const defaultState: ISimpleCounterState = {
   count: 10,
   test: '',
 };
+
+// 这里可以认为是创建了 entity
 
 export const simpleCounterStoreDescriptor = createStoreDescriptor({
   name: 'counter',
@@ -28,7 +32,7 @@ export const simpleCounterStoreDescriptor = createStoreDescriptor({
   },
 });
 
-storeContainer.add(simpleCounterStoreDescriptor);
+storeContainer.bind(simpleCounterStoreDescriptor);
 
 export const ISimpleCounterStoreType = simpleCounterStoreDescriptor.type;
 export type ISimpleCounterStoreDescriptor = typeof simpleCounterStoreDescriptor;

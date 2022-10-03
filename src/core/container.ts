@@ -1,15 +1,19 @@
-import { Store } from './store';
-import { StoreCollection } from './store-collection';
-import { IStoreDescriptor } from './store-descriptor';
-import { IStoreDiscriptorRegistry, StoreDiscriptorRegistry } from './store-registry';
-import { StoreStateUpdateTracker } from './store-state-update-tracker';
-import { Identifier, StoreType } from './types';
+import { Entity } from './entity';
+import { StoreCollection } from './entity-collection';
+import { IEntityDescriptor } from './entity-descriptor';
+import { IEntityRegistry, EntityRegistry } from './entity-registry';
+import { IProcessor } from './processor';
+import { StoreStateUpdateTracker } from './state-update-tracker';
+import { Identifier, Type } from './types';
 
-export class StoreContainer {
+/**
+ * Manage all the entities and processors
+ */
+export class Container {
   /**
    * Keep the descriptor of stores
    */
-  private registry: IStoreDiscriptorRegistry;
+  private registry: IEntityRegistry;
   /**
    * Keep the instances of store
    */
@@ -24,7 +28,7 @@ export class StoreContainer {
   private executionStack: Function[];
 
   constructor() {
-    this.registry = new StoreDiscriptorRegistry();
+    this.registry = new EntityRegistry();
     this.collection = new StoreCollection();
 
     this.updateTracker = new StoreStateUpdateTracker();
@@ -32,11 +36,11 @@ export class StoreContainer {
   }
 
   /**
-   * Add New Store Descriptor
+   * Bind Store Descriptor
    *
    * @param discriptor
    */
-  add(discriptor: IStoreDescriptor | any): void {
+  register(discriptor: IEntityDescriptor | any): void {
     this.registry.register(discriptor);
   }
 
@@ -47,14 +51,14 @@ export class StoreContainer {
    * @param type
    * @param id
    */
-  get(type: StoreType, id?: Identifier): Store {
+  get(type: Type, id?: Identifier): Entity {
     const instance = this.collection.get(type, id);
     if (instance) {
       return instance;
     } else {
       const descriptor = this.registry.getDescriptor(type);
       if (descriptor) {
-        const storeInstance = new Store(descriptor, this.updateTracker, this.executionStack, id);
+        const storeInstance = new Entity(descriptor, this.updateTracker, this.executionStack, id);
         this.collection.set(type, storeInstance, id);
         return storeInstance;
       } else {

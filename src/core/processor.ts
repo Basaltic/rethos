@@ -1,17 +1,18 @@
+/**
+ * Processor is a logic unit which is used to change the states of mulitple store isntances
+ */
+
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
-import { IStoreState } from './store-state';
-import { StoreStateUpdateTracker } from './store-state-update-tracker';
+import { Container } from './container';
+import { IRawState } from './observable-state';
+import { StoreStateUpdateTracker } from './state-update-tracker';
 import type { DropFirst } from './types';
 
-export type IStoreActions<S extends IStoreState = IStoreState> = {
+export type IEntityProcessors<S extends IRawState = IRawState> = {
   [key: string]: (state: S, ...args: any) => void;
 };
 
-export type ExtractActions<A extends IStoreActions> = {
-  [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
-};
-
-export type ExtractActions2<S extends IStoreState, A extends IStoreActions<S>> = {
+export type ExtractEntityProcessor<A extends IEntityProcessors> = {
   [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
 };
 
@@ -22,9 +23,9 @@ export type ExtractActions2<S extends IStoreState, A extends IStoreActions<S>> =
  * @param state the state passed to the action
  * @returns a proxy action object
  */
-export function createProxyAction<A extends IStoreActions>(
+export function createProxyEntityProcessor<A extends IEntityProcessors>(
   actions: A,
-  state: IStoreState,
+  state: IRawState,
   tracker: StoreStateUpdateTracker,
   actionExecutionStack: any[],
 ) {
@@ -52,7 +53,24 @@ export function createProxyAction<A extends IStoreActions>(
         }
       };
     },
-  }) as unknown as ExtractActions<A>;
+  }) as unknown as ExtractEntityProcessor<A>;
 
   return proxyActions;
 }
+
+/**
+ *
+ */
+export interface IProcessor {
+  execute(c: Container): void;
+}
+
+class Test implements IProcessor {
+  execute(c: Container): void {
+    console.log('xxxx');
+  }
+}
+
+class Tes2 {}
+
+function t<T extends IProcessor>(p: new () => T) {}

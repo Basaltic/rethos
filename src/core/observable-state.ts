@@ -1,16 +1,16 @@
 import { isObject } from '../utils/is-object';
 import { errors, throwError } from './error';
-import { StoreStateUpdateTracker } from './store-state-update-tracker';
+import { StoreStateUpdateTracker } from './state-update-tracker';
 import { JSONValue } from './types';
 
-export type IStoreState<T extends object = object> = {
+export type IRawState<T extends object = object> = {
   [k in keyof T]: JSONValue;
 };
 
 /**
  * Single Store to mange the state and action
  */
-export class StoreState<S extends IStoreState> {
+export class ObservableState<S extends IRawState> {
   /**
    * The original(default) state object.
    * - This object mainly used as the "identifier"

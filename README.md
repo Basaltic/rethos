@@ -5,10 +5,9 @@
 [![NPM Version](https://img.shields.io/npm/v/rethos?style=flat&colorA=brightgreen&colorB=lightgrey)](https://www.npmjs.com/package/rethos)
 [![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/package/rethos)
 
-小巧、简洁、强大的React状态管理库。
+实验性的状态管理库
 
-* **自动订阅**：自动订阅该状态并变更，不需要写任何的 select 函数来手动指定
-* **Flux架构**：遵循flux架构，使得状态更可控和管理
+
 
 **⚠️：处于开发中，1.0之前api不稳定**
 

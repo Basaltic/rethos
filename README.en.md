@@ -6,10 +6,8 @@
 [![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/package/rethos)
 
 
-A small, simple but powerful proxy based state management libaray in react. 
+An experimental state management library 
 
-* **Minimal Api**, only one api to create store (or store family), no extra boilerplate
-* **Auto Subscribition**, no select function needed, make code clean
 
 # Installation
 
