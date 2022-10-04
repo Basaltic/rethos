@@ -1,8 +1,10 @@
 {
   "name": "rethos",
   "private": false,
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "An state management library for react",
+  "author": "Lei Chen",
+  "license": "MIT",
   "files": [
     "dist"
   ],
@@ -54,6 +56,7 @@
     "management",
     "store"
   ],
-  "author": "Lei Chen",
-  "license": "MIT"
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
 }
