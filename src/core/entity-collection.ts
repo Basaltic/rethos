@@ -1,11 +1,12 @@
 import { Entity } from './entity';
 import { EntityFamily } from './entity-family';
+import { IRawState } from './observable-state';
 import { Identifier, Type } from './types';
 
 /**
  * Manage the store instance
  */
-export class StoreCollection {
+export class EntityCollection {
   private entries = new Map<Type, EntityFamily>();
 
   set(type: Type, store: Entity, id?: Identifier) {
@@ -27,6 +28,10 @@ export class StoreCollection {
     } else {
       return instancesMap?.get(type);
     }
+  }
+
+  getFamily<S extends IRawState = IRawState>(type: Type) {
+    return this.entries.get(type) as EntityFamily<S> | undefined;
   }
 
   has(type: Type, id?: Identifier) {

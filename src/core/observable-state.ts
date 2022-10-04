@@ -62,7 +62,7 @@ export class ObservableState<S extends IRawState> {
   /**
    * Get State that can be changed in action
    */
-  getChangeableState() {
+  getMutableState() {
     const proxyState = this.createChangeableState(this.originalState);
     return proxyState;
   }

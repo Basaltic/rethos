@@ -1,4 +1,4 @@
-import { createProxyEntityProcessor, IEntityProcessors } from './processor';
+import { createProxyEntityProcessors, IEntityProcessors } from './processor';
 import { IEntityDescriptor } from './entity-descriptor';
 import { IRawState, ObservableState } from './observable-state';
 import { StoreStateUpdateTracker } from './state-update-tracker';
@@ -20,7 +20,7 @@ export class Entity<S extends IRawState = IRawState> {
   /**
    * Default Single Store in this family if no "Id" passed
    */
-  private singleState: ObservableState<S>;
+  private observableState: ObservableState<S>;
 
   /**
    * Track the execution of the action
@@ -45,7 +45,7 @@ export class Entity<S extends IRawState = IRawState> {
 
     // quickly clone the state
     const ss = JSON.parse(JSON.stringify(descriptor.state));
-    this.singleState = new ObservableState<S>(ss, updateTracker);
+    this.observableState = new ObservableState<S>(ss, updateTracker);
   }
 
   /**
@@ -63,6 +63,25 @@ export class Entity<S extends IRawState = IRawState> {
   }
 
   /**
+   * 可变状态
+   */
+  get mutableState() {
+    return this.getMutableState();
+  }
+
+  getReadonlyState() {
+    return this.observableState.getReadonlyState();
+  }
+
+  getMutableState() {
+    return this.observableState.getMutableState();
+  }
+
+  getSubscribableState(fn?: TUpdateFn) {
+    return this.observableState.getSubscribableState(fn);
+  }
+
+  /**
    * Get State of the store
    *
    * @param updateFn
@@ -70,9 +89,9 @@ export class Entity<S extends IRawState = IRawState> {
    */
   getState(updateFn?: TUpdateFn) {
     if (updateFn) {
-      return this.singleState.getSubscribableState(updateFn);
+      return this.observableState.getSubscribableState(updateFn);
     } else {
-      return this.singleState.getReadonlyState();
+      return this.observableState.getReadonlyState();
     }
   }
 
@@ -80,9 +99,9 @@ export class Entity<S extends IRawState = IRawState> {
    *
    */
   getLocalProcessors(): IEntityProcessors<S> {
-    const state = this.singleState.getChangeableState();
-    const proxyActions = createProxyEntityProcessor(
-      this.descriptor.actions as IEntityProcessors<any>,
+    const state = this.observableState.getMutableState();
+    const proxyActions = createProxyEntityProcessors(
+      this.descriptor.processors as IEntityProcessors<any>,
       state,
       this.updateTracker,
       this.executionStack,

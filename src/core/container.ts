@@ -1,8 +1,8 @@
 import { Entity } from './entity';
-import { StoreCollection } from './entity-collection';
+import { EntityCollection } from './entity-collection';
 import { IEntityDescriptor } from './entity-descriptor';
 import { IEntityRegistry, EntityRegistry } from './entity-registry';
-import { IProcessor } from './processor';
+import { IRawState } from './observable-state';
 import { StoreStateUpdateTracker } from './state-update-tracker';
 import { Identifier, Type } from './types';
 
@@ -17,7 +17,7 @@ export class Container {
   /**
    * Keep the instances of store
    */
-  private collection: StoreCollection;
+  private collection: EntityCollection;
   /**
    * Track the state update
    */
@@ -29,7 +29,7 @@ export class Container {
 
   constructor() {
     this.registry = new EntityRegistry();
-    this.collection = new StoreCollection();
+    this.collection = new EntityCollection();
 
     this.updateTracker = new StoreStateUpdateTracker();
     this.executionStack = [];
@@ -51,20 +51,31 @@ export class Container {
    * @param type
    * @param id
    */
-  get(type: Type, id?: Identifier): Entity {
+  get<S extends IRawState = IRawState>(type: Type, id?: Identifier): Entity<S> {
     const instance = this.collection.get(type, id);
     if (instance) {
-      return instance;
+      return instance as unknown as Entity<S>;
     } else {
       const descriptor = this.registry.getDescriptor(type);
       if (descriptor) {
-        const storeInstance = new Entity(descriptor, this.updateTracker, this.executionStack, id);
-        this.collection.set(type, storeInstance, id);
-        return storeInstance;
+        const instance = new Entity(descriptor, this.updateTracker, this.executionStack, id);
+        this.collection.set(type, instance, id);
+        return instance as unknown as Entity<S>;
       } else {
-        throw new Error('no such type of store');
+        throw new Error('no such type of entity');
       }
     }
+  }
+
+  /**
+   * Get entity family
+   *
+   * @param type
+   * @returns
+   */
+  getEntityFamily<S extends IRawState = IRawState>(type: Type) {
+    const family = this.collection.getFamily<S>(type);
+    return family;
   }
 
   /**

@@ -1,4 +1,4 @@
-import { createStoreDescriptor } from '../../../../../src/main';
+import { entity } from '../../../../../src/main';
 import { storeContainer } from '../../../store';
 
 // - 这个类型定义，可以认为是定义了原型（也就是数据结构）
@@ -15,10 +15,10 @@ const defaultState: ISimpleCounterState = {
 
 // 这里可以认为是创建了 entity
 
-export const simpleCounterStoreDescriptor = createStoreDescriptor({
+export const simpleCounterStoreDescriptor = entity({
   name: 'counter',
   state: defaultState,
-  actions: {
+  processors: {
     inc: (state, incNum?: number) => {
       if (incNum) {
         state.count += incNum;
@@ -32,9 +32,9 @@ export const simpleCounterStoreDescriptor = createStoreDescriptor({
   },
 });
 
-storeContainer.bind(simpleCounterStoreDescriptor);
+storeContainer.register(simpleCounterStoreDescriptor);
 
-export const ISimpleCounterStoreType = simpleCounterStoreDescriptor.type;
-export type ISimpleCounterStoreDescriptor = typeof simpleCounterStoreDescriptor;
-export type ISimpleCounterStoreState = ISimpleCounterStoreDescriptor['state'];
-export type ISimpleCounterStoreActions = ISimpleCounterStoreDescriptor['actions'];
+// export const ISimpleCounterStoreType = simpleCounterStoreDescriptor.type;
+// export type ISimpleCounterStoreDescriptor = typeof simpleCounterStoreDescriptor;
+// export type ISimpleCounterStoreState = ISimpleCounterStoreDescriptor['state'];
+// export type ISimpleCounterStoreActions = ISimpleCounterStoreDescriptor['actions'];

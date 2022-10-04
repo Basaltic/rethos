@@ -5,8 +5,13 @@
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
 import { Container } from './container';
 import { IRawState } from './observable-state';
+import { IQuery } from './query';
 import { StoreStateUpdateTracker } from './state-update-tracker';
 import type { DropFirst } from './types';
+
+export type IProcessors = {
+  [key: string]: (query: IQuery) => void;
+};
 
 export type IEntityProcessors<S extends IRawState = IRawState> = {
   [key: string]: (state: S, ...args: any) => void;
@@ -23,7 +28,7 @@ export type ExtractEntityProcessor<A extends IEntityProcessors> = {
  * @param state the state passed to the action
  * @returns a proxy action object
  */
-export function createProxyEntityProcessor<A extends IEntityProcessors>(
+export function createProxyEntityProcessors<A extends IEntityProcessors>(
   actions: A,
   state: IRawState,
   tracker: StoreStateUpdateTracker,
@@ -65,12 +70,12 @@ export interface IProcessor {
   execute(c: Container): void;
 }
 
-class Test implements IProcessor {
-  execute(c: Container): void {
-    console.log('xxxx');
-  }
-}
+// class Test implements IProcessor {
+//   execute(c: Container): void {
+//     console.log('xxxx');
+//   }
+// }
 
-class Tes2 {}
+// class Tes2 {}
 
-function t<T extends IProcessor>(p: new () => T) {}
+// function t<T extends IProcessor>(p: new () => T) {}

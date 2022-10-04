@@ -5,8 +5,8 @@
 [![NPM Version](https://img.shields.io/npm/v/rethos?style=flat&colorA=brightgreen&colorB=lightgrey)](https://www.npmjs.com/package/rethos)
 [![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/package/rethos)
 
-实验性的状态管理库
 
+实验性的状态管理库
 
 
 **⚠️：处于开发中，1.0之前api不稳定**
@@ -26,39 +26,41 @@ pnpm add rethos
 ### 创建容器
 
 ```typescript
-import { StoreContainer } from 'rethos'
+// container.ts
 
-export const storeContainer = new StoreContainer();
+import { Container } from 'rethos'
+
+export const container = new Container();
 
 ```
 
-### 注入React上下文
+### 注入到React上下文
 
 ```tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { storeContainer } from './store-config'
+import { container } from './container'
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 
 root.render(
-  <Provider value={storeContainer}>
+  <Provider value={container}>
     <App />
   </Provider>
 )
 ```
 
-### 创建 Store
+### 创建状态实体
 
 ```ts
-// counter-store.ts
+// counter-model.ts
 
-import { createStoreDescriptor } from 'rethos'
-import { storeContainer } from './store-config'
+import { entityDescriptor } from 'rethos'
+import { container } from './container'
 
-// 定义（描述）Store
-const counterStoreDescriptor = createStoreDescriptor({
+// 定义状态实体
+export const counterEntityDescriptor = entityDescriptor({
   name: 'counter',
   state: {
     count: 0,
@@ -76,34 +78,38 @@ const counterStoreDescriptor = createStoreDescriptor({
 
 export const CounterStoreType = simpleCounterStoreDescriptor.type;
 
-// 这些类型是为了后续使用中更好的类型推断
-export type ICounterStoreState = ISimpleCounterStore['state'];
-export type ICounterStoreActions = ISimpleCounterStore['actions'];
-
-// 注册到容器中
-storeContainer.add(counterStoreDescriptor);
+// （可选）注册到容器中
+container.add(counterStoreDescriptor);
 
 ```
 
 ### 在组件中订阅状态、更改状态
 ```tsx
 import React from 'react'
-import { useStoreState, useStoreActions } from 'rethos'
+import { useEntity } from 'rethos'
 import { CounterStoreType } from './counter-store.ts'
 
 export const Counter = () => {
-  const { count } = useStoreState(CounterStoreType)
-  const counterActions = useStoreActions(CounterStoreType)
+  // 未注册的实体会自动注册到容器中
+  const [state, processors] = useEntity(counterEntityDescriptor)
+  const { count } = state
 
   return <div>
     <div>当前计数：{count}</div>
-    <button onClick={() => counterActions.inc()}>增加</button>
-    <button onClick={() => counterActions.dec()}>减少</button>
+    <button onClick={() => processors.inc()}>增加</button>
+    <button onClick={() => processors.dec()}>减少</button>
   </div>
 }
 
 ```
 
+# 概念
+
+### 状态实体（entity）
+
+
+
+### 处理器（processor）
 
 # 浏览器兼容
 

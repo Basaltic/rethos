@@ -15,6 +15,7 @@
     "noImplicitReturns": true,
     "declaration": true,
     "emitDeclarationOnly": true,
+    "jsx": "preserve",
     "outDir": "dist"
   },
   "include": ["src", "vite.config.js"],

@@ -1,3 +1,8 @@
+# 0.9.0
+
+* 引入 状态实体、处理器 的概念，用来替换 状态（state）、行为（action）的概念
+* 移除旧的hook，引入新的 useEntity hook
+
 # 0.8.1
 
 * 简化了store的api
