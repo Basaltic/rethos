@@ -6,7 +6,7 @@ import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
 import { IRawState } from './observable-state';
 import { MutableQuery } from './query';
 import { StoreStateUpdateTracker } from './state-update-tracker';
-import { createType, DropFirst, Type } from './types';
+import { DropFirst } from './types';
 
 /**
  * Processor is a pure function with a query instance & custom argument
