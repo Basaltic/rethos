@@ -3,23 +3,35 @@
  */
 
 import { unstable_batchedUpdates as reactBatchUpdate } from 'react-dom';
-import { Container } from './container';
 import { IRawState } from './observable-state';
-import { IQuery } from './query';
+import { MutableQuery } from './query';
 import { StoreStateUpdateTracker } from './state-update-tracker';
-import type { DropFirst } from './types';
+import { createType, DropFirst, Type } from './types';
 
-export type IProcessors = {
-  [key: string]: (query: IQuery) => void;
+/**
+ * Processor is a pure function with a query instance & custom argument
+ */
+export type Processor = (query: MutableQuery, ...args: any) => void;
+
+export type Processors = {
+  [key: string]: Processor;
 };
 
-export type IEntityProcessors<S extends IRawState = IRawState> = {
-  [key: string]: (state: S, ...args: any) => void;
-};
-
-export type ExtractEntityProcessor<A extends IEntityProcessors> = {
+export type ExtractProcessors<A extends Processors> = {
   [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
 };
+
+export type EntityProcessor<S extends IRawState = IRawState> = (state: S, ...args: any) => void;
+
+export type EntityProcessors<S extends IRawState = IRawState> = {
+  [key: string]: EntityProcessor<S>;
+};
+
+export type ExtractEntityProcessors<A extends EntityProcessors> = {
+  [key in keyof A]: (...rest: DropFirst<Parameters<A[key]>>) => void;
+};
+
+export type ExtractProcessor<A extends Processor | EntityProcessor> = (...rest: DropFirst<Parameters<A>>) => void;
 
 /**
  * Proxy the action functions
@@ -28,24 +40,24 @@ export type ExtractEntityProcessor<A extends IEntityProcessors> = {
  * @param state the state passed to the action
  * @returns a proxy action object
  */
-export function createProxyEntityProcessors<A extends IEntityProcessors>(
-  actions: A,
+export function createProxyEntityProcessors<A extends EntityProcessors>(
+  processors: A,
   state: IRawState,
   tracker: StoreStateUpdateTracker,
-  actionExecutionStack: any[],
+  executionStack: any[],
 ) {
-  const proxyActions = new Proxy(actions, {
+  const proxyProcessors = new Proxy(processors, {
     get: (target: A, prop: string) => {
-      const rawAction = target[prop];
+      const rawProcessors = target[prop];
       return (...args: any) => {
         try {
-          const doAction = () => rawAction(state, ...args);
+          const doAction = () => rawProcessors(state, ...args);
 
-          actionExecutionStack.push(doAction);
+          executionStack.push(doAction);
           doAction();
-          actionExecutionStack.pop();
+          executionStack.pop();
 
-          const isExecuting = actionExecutionStack.length > 0;
+          const isExecuting = executionStack.length > 0;
           if (!isExecuting) {
             if (typeof reactBatchUpdate === 'function') {
               reactBatchUpdate(tracker.commitUpdate.bind(tracker));
@@ -54,28 +66,46 @@ export function createProxyEntityProcessors<A extends IEntityProcessors>(
             }
           }
         } catch (e) {
-          actionExecutionStack = [];
+          executionStack = [];
         }
       };
     },
-  }) as unknown as ExtractEntityProcessor<A>;
+  }) as unknown as ExtractEntityProcessors<A>;
 
-  return proxyActions;
+  return proxyProcessors;
 }
 
-/**
- *
- */
-export interface IProcessor {
-  execute(c: Container): void;
+export function createProxyProcessors<A extends Processors>(
+  processors: A,
+  query: MutableQuery,
+  tracker: StoreStateUpdateTracker,
+  executionStack: any[],
+) {
+  const proxyProcessors = new Proxy(processors, {
+    get: (target: A, prop: string) => {
+      const rawProcessors = target[prop];
+      return (...args: any) => {
+        try {
+          const doAction = () => rawProcessors(query, ...args);
+
+          executionStack.push(doAction);
+          doAction();
+          executionStack.pop();
+
+          const isExecuting = executionStack.length > 0;
+          if (!isExecuting) {
+            if (typeof reactBatchUpdate === 'function') {
+              reactBatchUpdate(tracker.commitUpdate.bind(tracker));
+            } else {
+              tracker.commitUpdate();
+            }
+          }
+        } catch (e) {
+          executionStack = [];
+        }
+      };
+    },
+  }) as unknown as ExtractProcessors<A>;
+
+  return proxyProcessors;
 }
-
-// class Test implements IProcessor {
-//   execute(c: Container): void {
-//     console.log('xxxx');
-//   }
-// }
-
-// class Tes2 {}
-
-// function t<T extends IProcessor>(p: new () => T) {}

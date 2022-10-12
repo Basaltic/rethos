@@ -1,19 +1,28 @@
 import { Entity } from './entity';
 import { EntityCollection } from './entity-collection';
-import { IEntityDescriptor } from './entity-descriptor';
-import { IEntityRegistry, EntityRegistry } from './entity-registry';
+import { IEntityDescriptor, IProcessorsDescriptor } from './descriptor';
+import { EntityFamily } from './entity-family';
+import { IRegistry, Registry } from './registry';
 import { IRawState } from './observable-state';
 import { StoreStateUpdateTracker } from './state-update-tracker';
 import { Identifier, Type } from './types';
+import { MutableQuery } from './query';
+import { createProxyProcessors } from './processor';
+
+export interface IContainer {
+  register(discriptor: IEntityDescriptor | any): void;
+  get<S extends IRawState = IRawState>(type: Type, id?: Identifier): Entity<S>;
+  getEntityFamily<S extends IRawState = IRawState>(type: Type): EntityFamily<S> | undefined;
+}
 
 /**
  * Manage all the entities and processors
  */
-export class Container {
+export class Container implements IContainer {
   /**
    * Keep the descriptor of stores
    */
-  private registry: IEntityRegistry;
+  private registry: IRegistry;
   /**
    * Keep the instances of store
    */
@@ -27,12 +36,16 @@ export class Container {
    */
   private executionStack: Function[];
 
+  private query: MutableQuery;
+
   constructor() {
-    this.registry = new EntityRegistry();
+    this.registry = new Registry();
     this.collection = new EntityCollection();
 
     this.updateTracker = new StoreStateUpdateTracker();
     this.executionStack = [];
+
+    this.query = new MutableQuery(this);
   }
 
   /**
@@ -56,7 +69,7 @@ export class Container {
     if (instance) {
       return instance as unknown as Entity<S>;
     } else {
-      const descriptor = this.registry.getDescriptor(type);
+      const descriptor = this.registry.getDescriptor(type) as IEntityDescriptor;
       if (descriptor) {
         const instance = new Entity(descriptor, this.updateTracker, this.executionStack, id);
         this.collection.set(type, instance, id);
@@ -73,9 +86,19 @@ export class Container {
    * @param type
    * @returns
    */
-  getEntityFamily<S extends IRawState = IRawState>(type: Type) {
+  getEntityFamily<S extends IRawState = IRawState>(type: Type): EntityFamily<S> | undefined {
     const family = this.collection.getFamily<S>(type);
     return family;
+  }
+
+  getProcessors(type: Type) {
+    const descriptor = this.registry.getDescriptor(type) as IProcessorsDescriptor;
+    if (descriptor) {
+      const instance = createProxyProcessors(descriptor.processors, this.query, this.updateTracker, this.executionStack);
+      return instance;
+    } else {
+      throw new Error('no such type of processors');
+    }
   }
 
   /**

@@ -1,13 +1,13 @@
 import { Container } from './container';
+import { MutableEntity } from './entity';
+import { MutableEntityFamily } from './entity-family';
 import { IRawState } from './observable-state';
 import { Identifier, Type } from './types';
-
-export interface IQuery {}
 
 /**
  *
  */
-export class MutableQuery implements IQuery {
+export class MutableQuery {
   constructor(private container: Container) {}
 
   /**
@@ -17,7 +17,8 @@ export class MutableQuery implements IQuery {
    * @returns
    */
   get<S extends IRawState>(type: Type, id?: Identifier) {
-    return this.container.get<S>(type, id);
+    const entity = this.container.get<S>(type, id);
+    return new MutableEntity(entity);
   }
 
   /**
@@ -26,8 +27,10 @@ export class MutableQuery implements IQuery {
    * @param type
    * @returns
    */
-  getFamily(type: Type) {
-    const family = this.container.getEntityFamily(type);
-    return family;
+  getFamily<S extends IRawState>(type: Type) {
+    const family = this.container.getEntityFamily<S>(type);
+    return family ? new MutableEntityFamily<S>(family) : undefined;
   }
 }
+
+export class ReadonlyQuery {}

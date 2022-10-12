@@ -33,8 +33,3 @@ export const simpleCounterStoreDescriptor = entity({
 });
 
 storeContainer.register(simpleCounterStoreDescriptor);
-
-// export const ISimpleCounterStoreType = simpleCounterStoreDescriptor.type;
-// export type ISimpleCounterStoreDescriptor = typeof simpleCounterStoreDescriptor;
-// export type ISimpleCounterStoreState = ISimpleCounterStoreDescriptor['state'];
-// export type ISimpleCounterStoreActions = ISimpleCounterStoreDescriptor['actions'];

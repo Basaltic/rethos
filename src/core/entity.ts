@@ -1,11 +1,11 @@
-import { createProxyEntityProcessors, IEntityProcessors } from './processor';
-import { IEntityDescriptor } from './entity-descriptor';
+import { createProxyEntityProcessors, EntityProcessors } from './processor';
+import { IEntityDescriptor } from './descriptor';
 import { IRawState, ObservableState } from './observable-state';
 import { StoreStateUpdateTracker } from './state-update-tracker';
 import { TUpdateFn, Identifier } from './types';
 
 /**
- * Manage the state and actions
+ * Entity manage the state & the processors which are used to process the state in this entity
  */
 export class Entity<S extends IRawState = IRawState> {
   /**
@@ -51,8 +51,8 @@ export class Entity<S extends IRawState = IRawState> {
   /**
    * Actions of the store
    */
-  get actions() {
-    return this.getLocalProcessors();
+  get processors() {
+    return this.getProcessors();
   }
 
   /**
@@ -96,18 +96,40 @@ export class Entity<S extends IRawState = IRawState> {
   }
 
   /**
-   *
+   * Processors
    */
-  getLocalProcessors(): IEntityProcessors<S> {
+  getProcessors(): EntityProcessors<S> {
     const state = this.observableState.getMutableState();
     const proxyActions = createProxyEntityProcessors(
-      this.descriptor.processors as IEntityProcessors<any>,
+      this.descriptor.processors as EntityProcessors<any>,
       state,
       this.updateTracker,
       this.executionStack,
     );
     return proxyActions;
   }
+
+  toMutableEntity() {
+    return new MutableEntity<S>(this);
+  }
+
+  toReadonlyEntity() {}
 }
 
-export class ReadonlyEntity {}
+/**
+ * A
+ */
+export class MutableEntity<S extends IRawState = IRawState> {
+  private entity: Entity<S>;
+  constructor(entity: Entity<S>) {
+    this.entity = entity;
+  }
+
+  get state() {
+    return this.entity.getReadonlyState();
+  }
+
+  get processors() {
+    return this.entity.getProcessors();
+  }
+}
