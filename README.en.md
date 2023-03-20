@@ -6,8 +6,6 @@
 [![Build Size](https://img.shields.io/bundlephobia/minzip/rethos?label=bundle%20size&style=flat&colorA=brightgreen&colorB=lightgrey)](https://bundlephobia.com/package/rethos)
 
 
-An experimental state management library 
-
 
 # Installation
 
